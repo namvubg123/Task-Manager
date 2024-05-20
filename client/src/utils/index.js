@@ -1,6 +1,6 @@
 export const formatDate = (date) => {
   // Get the month, day, and year
-  const month = date.toLocaleString("en-US", { month: "short" });
+  const month = date.toLocaleString("vi-VN", { month: "2-digit" });
   const day = date.getDate();
   const year = date.getFullYear();
 

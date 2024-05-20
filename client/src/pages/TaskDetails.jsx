@@ -24,12 +24,12 @@ import {
   usePostTaskActivityMutation,
 } from "../redux/slices/api/taskApi";
 
-const assets = [
-  "https://images.pexels.com/photos/2418664/pexels-photo-2418664.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-  "https://images.pexels.com/photos/8797307/pexels-photo-8797307.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-  "https://images.pexels.com/photos/2534523/pexels-photo-2534523.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-  "https://images.pexels.com/photos/804049/pexels-photo-804049.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-];
+// const assets = [
+//   "https://images.pexels.com/photos/2418664/pexels-photo-2418664.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+//   "https://images.pexels.com/photos/8797307/pexels-photo-8797307.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+//   "https://images.pexels.com/photos/2534523/pexels-photo-2534523.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+//   "https://images.pexels.com/photos/804049/pexels-photo-804049.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+// ];
 
 const ICONS = {
   high: <MdKeyboardDoubleArrowUp />,
@@ -44,8 +44,8 @@ const bgColor = {
 };
 
 const TABS = [
-  { title: "Task Detail", icon: <FaTasks /> },
-  { title: "Activities/Timeline", icon: <RxActivityLog /> },
+  { title: "Chi tiết công việc", icon: <FaTasks /> },
+  { title: "Hoạt động", icon: <RxActivityLog /> },
 ];
 
 const TASKTYPEICON = {
@@ -137,26 +137,26 @@ const TaskDetails = () => {
                 </div>
 
                 <p className="text-gray-500">
-                  Created At: {new Date(task?.date).toDateString()}
+                  Ngày tạo: {new Date(task?.date).toLocaleDateString("vi-VN")}
                 </p>
 
                 <div className="flex items-center gap-8 p-4 border-y border-gray-200">
                   <div className="space-x-2">
-                    <span className="font-semibold">Assets :</span>
+                    <span className="font-semibold">Đính kèm :</span>
                     <span>{task?.assets?.length}</span>
                   </div>
 
                   <span className="text-gray-400">|</span>
 
                   <div className="space-x-2">
-                    <span className="font-semibold">Sub-Task :</span>
+                    <span className="font-semibold">Công việc phụ :</span>
                     <span>{task?.subTasks?.length}</span>
                   </div>
                 </div>
 
                 <div className="space-y-4 py-6">
                   <p className="text-gray-600 font-semibold test-sm">
-                    TASK TEAM
+                    THÀNH VIÊN NHÓM
                   </p>
                   <div className="space-y-3">
                     {task?.team?.map((m, index) => (
@@ -185,7 +185,7 @@ const TaskDetails = () => {
 
                 <div className="space-y-4 py-6">
                   <p className="text-gray-500 font-semibold text-sm">
-                    SUB-TASKS
+                    CÔNG VIỆC PHỤ
                   </p>
                   <div className="space-y-8">
                     {task?.subTasks?.map((el, index) => (
@@ -197,7 +197,7 @@ const TaskDetails = () => {
                         <div className="space-y-1">
                           <div className="flex gap-2 items-center">
                             <span className="text-sm text-gray-500">
-                              {new Date(el?.date).toDateString()}
+                              {new Date(el?.date).toLocaleDateString("vi-VN")}
                             </span>
 
                             <span className="px-2 py-0.5 text-center text-sm rounded-full bg-violet-100 text-violet-700 font-semibold">
@@ -214,24 +214,38 @@ const TaskDetails = () => {
               </div>
               {/* RIGHT */}
               <div className="w-full md:w-1/2 space-y-8">
-                <p className="text-lg font-semibold">ASSETS</p>
+                <p className="text-lg font-semibold">ĐÍNH KÈM</p>
 
                 <div className="w-full grid grid-cols-2 gap-4">
-                  {task?.assets?.map((el, index) => (
-                    <img
-                      key={index}
-                      src={el}
-                      alt={task?.title}
-                      className="w-full rounded h-28 md:h-36 2xl:h-52 cursor-pointer transition-all duration-700 hover:scale-125 hover:z-50"
-                    />
-                  ))}
+                  {task?.assets?.map((el, index) => {
+                    const fileName = el.split("?")[0]; // Trích xuất tên tệp từ URL
+                    return (
+                      <div className="flex flex-col items-center" key={index}>
+                        <a href={el} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={el}
+                            alt={task?.title}
+                            className="w-full rounded h-28 md:h-36 2xl:h-52 cursor-pointer transition-all duration-700 hover:scale-125 hover:z-50"
+                          />
+                        </a>
+                        <p className="text-sm mt-2">
+                          {fileName.split("/").pop()}
+                        </p>{" "}
+                        {/* Hiển thị tên tệp */}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           </>
         ) : (
           <>
-            <Activities activity={data?.activities} id={id} refetch={refetch} />
+            <Activities
+              activity={data?.task?.activities}
+              id={id}
+              refetch={refetch}
+            />
           </>
         )}
       </Tabs>
