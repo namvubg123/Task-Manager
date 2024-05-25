@@ -24,22 +24,27 @@ const linkData = [
     icon: <FaTasks />,
   },
   {
+    label: "Công việc được giao",
+    link: "todo/todo",
+    icon: <MdOutlinePendingActions />,
+  },
+  {
     label: "Hoàn thành",
     link: "completed/completed",
     icon: <MdTaskAlt />,
   },
   {
-    label: "Đang thực hiện",
-    link: "in-progress/in progress",
+    label: "Chờ duyệt",
+    link: "in-progress/pending",
     icon: <MdOutlinePendingActions />,
   },
   {
-    label: "Cần phải làm",
-    link: "todo/todo",
+    label: "Quá hạn",
+    link: "expired/expired",
     icon: <MdOutlinePendingActions />,
   },
   {
-    label: "Thành viên",
+    label: "Nhân sự",
     link: "team",
     icon: <FaUsers />,
   },
@@ -97,7 +102,7 @@ const Sidebar = () => {
       <div className="">
         <button className="w-full flex gap-2 p-2 items-center text-lg text-gray-800">
           <MdSettings />
-          <span>Cài đặt</span>
+          <span></span>
         </button>
       </div>
     </div>

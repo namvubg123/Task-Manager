@@ -41,8 +41,10 @@ export const PRIOTITYSTYELS = {
 };
 
 export const TASK_TYPE = {
+  expired: "bg-black",
+  late: "bg-red-600",
   todo: "bg-blue-600",
-  "in progress": "bg-yellow-600",
+  pending: "bg-yellow-600",
   completed: "bg-green-600",
 };
 

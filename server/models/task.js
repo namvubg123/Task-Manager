@@ -4,6 +4,7 @@ const taskSchema = new Schema(
   {
     title: { type: String, required: true },
     date: { type: Date, default: new Date() },
+    deadline: { type: Date },
     priority: {
       type: String,
       default: "normal",
@@ -12,7 +13,7 @@ const taskSchema = new Schema(
     stage: {
       type: String,
       default: "todo",
-      enum: ["todo", "in progress", "completed"],
+      enum: ["todo", "pending", "completed", "late", "expired"],
     },
     activities: [
       {
@@ -22,7 +23,7 @@ const taskSchema = new Schema(
           enum: [
             "assigned",
             "started",
-            "in progress",
+            "pending",
             "bug",
             "completed",
             "commented",
@@ -37,7 +38,12 @@ const taskSchema = new Schema(
     subTasks: [
       {
         title: String,
-        date: Date,
+        date: {
+          type: Date,
+          default: function () {
+            return new Date();
+          },
+        },
         tag: String,
       },
     ],

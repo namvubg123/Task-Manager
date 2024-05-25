@@ -4,13 +4,14 @@ import { useNavigate } from "react-router-dom";
 import Textbox from "../components/Textbox";
 import Button from "../components/Button";
 import { useDispatch, useSelector } from "react-redux";
-import { useLoginMutation } from "../redux/slices/api/authApi";
+import { useRegisterMutation } from "../redux/slices/api/authApi";
 import { toast } from "sonner";
 import { setCredentials } from "../redux/slices/authSlice";
 import Loading from "./../components/Loader";
 
-const Login = () => {
+const Register = () => {
   const { user } = useSelector((state) => state.auth);
+
   const {
     register,
     handleSubmit,
@@ -20,25 +21,25 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [login, { isLoading }] = useLoginMutation();
+  const [signUp, { isLoading }] = useRegisterMutation();
 
   const submitHandler = async (data) => {
     try {
-      const result = await login(data).unwrap();
-      dispatch(setCredentials(result));
-
+      const result = await signUp(data).unwrap();
+      //   dispatch(setCredentials(result));
+      toast.success("Tạo thành công ");
       navigate("/");
     } catch (error) {
       // console.log(error);
       toast.error(error?.data?.message || error.message);
     }
   };
-  const handleRegistrationClick = () => {
-    navigate("/register");
+  const handleLoginClick = () => {
+    navigate("/log-in");
   };
 
   useEffect(() => {
-    user && navigate("/dashboard");
+    user && navigate("/log-in");
   }, [user]);
 
   return (
@@ -76,6 +77,17 @@ const Login = () => {
 
             <div className="flex flex-col gap-y-5">
               <Textbox
+                placeholder="Họ và tên"
+                type="text"
+                name="name"
+                label="Họ và tên"
+                className="w-full rounded-full"
+                register={register("name", {
+                  required: "Name Address is required!",
+                })}
+                error={errors.name ? errors.name.message : ""}
+              />
+              <Textbox
                 placeholder="email@example.com"
                 type="email"
                 name="email"
@@ -90,7 +102,7 @@ const Login = () => {
                 placeholder="your password"
                 type="password"
                 name="password"
-                label="Mật khẩu"
+                label="Password"
                 className="w-full rounded-full"
                 register={register("password", {
                   required: "Password is required!",
@@ -100,9 +112,9 @@ const Login = () => {
 
               <span
                 className="text-sm text-gray-500 hover:text-blue-600 hover:underline cursor-pointer"
-                onClick={handleRegistrationClick}
+                onClick={handleLoginClick}
               >
-                Chưa có tài khoản? Đăng ký
+                Đã có tài khoản? Đăng nhập
               </span>
 
               {isLoading ? (
@@ -110,7 +122,7 @@ const Login = () => {
               ) : (
                 <Button
                   type="submit"
-                  label="Đăng nhập"
+                  label="Đăng Ký"
                   className="w-full h-10 bg-blue-700 text-white rounded-full"
                 />
               )}
@@ -122,4 +134,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

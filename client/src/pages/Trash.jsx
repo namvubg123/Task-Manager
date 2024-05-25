@@ -7,18 +7,16 @@ import {
   MdKeyboardDoubleArrowUp,
   MdOutlineRestore,
 } from "react-icons/md";
-import { tasks } from "../assets/data";
-import Title from "../components/Title";
+import { toast } from "sonner";
 import Button from "../components/Button";
-import { PRIOTITYSTYELS, TASK_TYPE } from "../utils";
-import AddUser from "../components/AddUser";
 import ConfirmatioDialog from "../components/Dialogs";
+import Loading from "../components/Loader";
+import Title from "../components/Title";
 import {
   useDeleteRestoreTaskMutation,
   useGetAllTaskQuery,
 } from "../redux/slices/api/taskApi";
-import Loading from "../components/Loader";
-import { toast } from "sonner";
+import { PRIOTITYSTYELS, TASK_TYPE } from "../utils";
 
 const ICONS = {
   high: <MdKeyboardDoubleArrowUp />,
@@ -86,26 +84,27 @@ const Trash = () => {
 
   const deleteAllClick = () => {
     setType("deleteAll");
-    setMsg("Do you want to permenantly delete all items?");
+    setMsg("Bạn có muốn xóa vĩnh viễn tất cả?");
     setOpenDialog(true);
   };
 
   const restoreAllClick = () => {
     setType("restoreAll");
-    setMsg("Do you want to restore all items in the trash?");
+    setMsg("Bạn có muốn khôi phục tất cả?");
     setOpenDialog(true);
   };
 
   const deleteClick = (id) => {
     setType("delete");
     setSelected(id);
+    setMsg("Bạn có muốn xóa vĩnh viễn?");
     setOpenDialog(true);
   };
 
   const restoreClick = (id) => {
     setSelected(id);
     setType("restore");
-    setMsg("Do you want to restore the selected item?");
+    setMsg("Bạn có muốn khôi phục?");
     setOpenDialog(true);
   };
 
@@ -119,10 +118,10 @@ const Trash = () => {
   const TableHeader = () => (
     <thead className="border-b border-gray-300">
       <tr className="text-black  text-left">
-        <th className="py-2">Task Title</th>
-        <th className="py-2">Priority</th>
-        <th className="py-2">Stage</th>
-        <th className="py-2 line-clamp-1">Modified On</th>
+        <th className="py-2">Tiêu đề</th>
+        <th className="py-2">Độ ưu tiên</th>
+        <th className="py-2">Trạng thái</th>
+        <th className="py-2 line-clamp-1">Thời gian</th>
       </tr>
     </thead>
   );
@@ -145,14 +144,23 @@ const Trash = () => {
           <span className={clsx("text-lg", PRIOTITYSTYELS[item?.priority])}>
             {ICONS[item?.priority]}
           </span>
-          <span className="">{item?.priority}</span>
+          <span className="">
+            {item?.priority === "high" && "QUAN TRỌNG"}
+            {item?.priority === "medium" && "Trung Bình"}
+            {item?.priority === "normal" && "Bình thường"}
+            {item?.priority === "low" && "Thấp"}
+          </span>
         </div>
       </td>
 
       <td className="py-2 capitalize text-center md:text-start">
         {item?.stage}
       </td>
-      <td className="py-2 text-sm">{new Date(item?.date).toDateString()}</td>
+      <td className="py-2 text-sm">
+        {new Date(item?.date).toLocaleString("vi-VN", {
+          dateStyle: "medium",
+        })}
+      </td>
 
       <td className="py-2 flex gap-1 justify-end">
         <Button
@@ -175,13 +183,13 @@ const Trash = () => {
 
           <div className="flex gap-2 md:gap-4 items-center">
             <Button
-              label="Restore All"
+              label="Khôi phục tất cả"
               icon={<MdOutlineRestore className="text-lg hidden md:flex" />}
               className="flex flex-row-reverse gap-1 items-center  text-black text-sm md:text-base rounded-md 2xl:py-2.5"
               onClick={() => restoreAllClick()}
             />
             <Button
-              label="Delete All"
+              label="Xóa tất cả"
               icon={<MdDelete className="text-lg hidden md:flex" />}
               className="flex flex-row-reverse gap-1 items-center  text-red-600 text-sm md:text-base rounded-md 2xl:py-2.5"
               onClick={() => deleteAllClick()}

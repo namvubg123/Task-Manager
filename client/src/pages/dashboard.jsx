@@ -28,9 +28,9 @@ const TaskTable = ({ tasks }) => {
     <thead className="border-b border-gray-300 ">
       <tr className="text-black text-left">
         <th className="py-2">Tiêu đề</th>
-        <th className="py-2">Mức quan trọng</th>
-        <th className="py-2">Nhóm</th>
-        <th className="py-2 hidden md:block">Ngày tạo</th>
+        <th className="py-2">Độ ưu tiên</th>
+        <th className="py-2">Nhân sự</th>
+        <th className="py-2 hidden md:block">Deadline</th>
       </tr>
     </thead>
   );
@@ -52,7 +52,12 @@ const TaskTable = ({ tasks }) => {
           <span className={clsx("text-lg", PRIOTITYSTYELS[task.priority])}>
             {ICONS[task.priority]}
           </span>
-          <span className="capitalize">{task.priority}</span>
+          <span className="capitalize">
+            {task?.priority === "high" && "QUAN TRỌNG"}
+            {task?.priority === "medium" && "Trung Bình"}
+            {task?.priority === "normal" && "Bình thường"}
+            {task?.priority === "low" && "Thấp"}
+          </span>
         </div>
       </td>
 
@@ -73,11 +78,12 @@ const TaskTable = ({ tasks }) => {
       </td>
       <td className="py-2 hidden md:block">
         <span className="text-base text-gray-600">
-          {moment(task?.date).fromNow()}
+          {moment(task?.deadline).fromNow()}
         </span>
       </td>
     </tr>
   );
+
   return (
     <>
       <div className="w-full md:w-2/3 bg-white px-2 md:px-4 pt-4 pb-4 shadow-md rounded">
@@ -98,9 +104,9 @@ const UserTable = ({ users }) => {
   const TableHeader = () => (
     <thead className="border-b border-gray-300 ">
       <tr className="text-black  text-left">
-        <th className="py-2">Full Name</th>
-        <th className="py-2">Status</th>
-        <th className="py-2">Created At</th>
+        <th className="py-2">Tên</th>
+        <th className="py-2">Trạng thái</th>
+        <th className="py-2"></th>
       </tr>
     </thead>
   );
@@ -127,10 +133,15 @@ const UserTable = ({ users }) => {
             user?.isActive ? "bg-blue-200" : "bg-yellow-100"
           )}
         >
-          {user?.isActive ? "Active" : "Disabled"}
+          {user?.isActive ? "Hoạt động" : "Disabled"}
         </p>
       </td>
-      <td className="py-2 text-sm">{moment(user?.createdAt).fromNow()}</td>
+      <td className="py-2 text-sm">
+        {new Date(user?.createdAt).toLocaleString("vi-VN", {
+          timeZone: "Asia/Ho_Chi_Minh",
+          dateStyle: "medium",
+        })}
+      </td>
     </tr>
   );
 
@@ -167,25 +178,25 @@ const Dashboard = () => {
       bg: "bg-[#1d4ed8]",
     },
     {
+      _id: "4",
+      label: "CÔNG VIỆC ĐƯỢC GIAO",
+      total: totals["todo"] || 0,
+      icon: <FaArrowsToDot />,
+      bg: "bg-[#be185d]" || 0,
+    },
+    {
+      _id: "3",
+      label: "CHỜ DUYỆT ",
+      total: totals["pending"] || 0,
+      icon: <LuClipboardEdit />,
+      bg: "bg-[#f59e0b]",
+    },
+    {
       _id: "2",
       label: "CÔNG VIỆC ĐÃ HOÀN THÀNH",
       total: totals["completed"] || 0,
       icon: <MdAdminPanelSettings />,
       bg: "bg-[#0f766e]",
-    },
-    {
-      _id: "3",
-      label: "CÔNG VIỆC ĐANG THỰC HIỆN ",
-      total: totals["in progress"] || 0,
-      icon: <LuClipboardEdit />,
-      bg: "bg-[#f59e0b]",
-    },
-    {
-      _id: "4",
-      label: "CÔNG VIỆC CẦN LÀM",
-      total: totals["todo"],
-      icon: <FaArrowsToDot />,
-      bg: "bg-[#be185d]" || 0,
     },
   ];
 

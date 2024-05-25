@@ -15,6 +15,7 @@ import Button from "../Button";
 import ConfirmatioDialog from "../Dialogs";
 import { useTrashTaskMutation } from "../../redux/slices/api/taskApi";
 import AddTask from "./AddTask";
+import { useNavigate } from "react-router-dom";
 
 const ICONS = {
   high: <MdKeyboardDoubleArrowUp />,
@@ -27,6 +28,7 @@ const Table = ({ tasks }) => {
   const [selected, setSelected] = useState(null);
   const [deleteTask] = useTrashTaskMutation();
   const [openEdit, setOpenEdit] = useState(false);
+  const navigate = useNavigate();
 
   const deleteClicks = (id) => {
     setSelected(id);
@@ -59,10 +61,10 @@ const Table = ({ tasks }) => {
     <thead className="w-full border-b border-gray-300">
       <tr className="w-full text-black  text-left">
         <th className="py-2">Tiêu đề</th>
-        <th className="py-2">Mức độ quan trọng</th>
+        <th className="py-2">Độ ưu tiên</th>
         <th className="py-2 line-clamp-1">Ngày tạo</th>
-        <th className="py-2">Assets</th>
-        <th className="py-2">Nhóm</th>
+        <th className="py-2">Đính kèm</th>
+        <th className="py-2">Nhân sự</th>
       </tr>
     </thead>
   );
@@ -74,7 +76,10 @@ const Table = ({ tasks }) => {
           <div
             className={clsx("w-4 h-4 rounded-full", TASK_TYPE[task.stage])}
           />
-          <p className="w-full line-clamp-2 text-base text-black">
+          <p
+            className="w-full line-clamp-2 text-base text-black"
+            onClick={() => navigate(`/task/${task._id}`)}
+          >
             {task?.title}
           </p>
         </div>
@@ -82,11 +87,14 @@ const Table = ({ tasks }) => {
 
       <td className="py-2">
         <div className={"flex gap-1 items-center"}>
+          <span className="capitalize line-clamp-1">
+            {task?.priority === "high" && "QUAN TRỌNG"}
+            {task?.priority === "medium" && "Trung Bình"}
+            {task?.priority === "normal" && "Bình thường"}
+            {task?.priority === "low" && "Thấp"}
+          </span>
           <span className={clsx("text-lg", PRIOTITYSTYELS[task?.priority])}>
             {ICONS[task?.priority]}
-          </span>
-          <span className="capitalize line-clamp-1">
-            {task?.priority} Priority
           </span>
         </div>
       </td>
@@ -133,14 +141,14 @@ const Table = ({ tasks }) => {
       <td className="py-2 flex gap-2 md:gap-4 justify-end">
         <Button
           className="text-blue-600 hover:text-blue-500 sm:px-0 text-sm md:text-base"
-          label="Edit"
+          label="Sửa"
           type="button"
           onClick={() => editTaskHandler(task)}
         />
 
         <Button
           className="text-red-700 hover:text-red-500 sm:px-0 text-sm md:text-base"
-          label="Delete"
+          label="Xóa"
           type="button"
           onClick={() => deleteClicks(task._id)}
         />

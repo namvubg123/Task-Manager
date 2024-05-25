@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner";
 import { dateFormatter } from "../../utils";
 
-const LISTS = ["TODO", "IN PROGRESS", "COMPLETED"];
+const LISTS = ["TODO", "PENDING", "COMPLETED", "LATE", "EXPIRED"];
 const PRIORIRY = ["HIGH", "MEDIUM", "NORMAL", "LOW"];
 
 const uploadedFileURLs = [];
@@ -30,6 +30,7 @@ const AddTask = ({ open, setOpen, task }) => {
   const defaultValues = {
     title: task?.title || "",
     date: dateFormatter(task?.date || new Date()),
+    deadline: dateFormatter(task?.date),
     team: [],
     stage: "",
     priority: "",
@@ -45,6 +46,7 @@ const AddTask = ({ open, setOpen, task }) => {
 
   const [team, setTeam] = useState(task?.team || []);
   const [stage, setStage] = useState(task?.stage?.toUpperCase() || LISTS[0]);
+
   const [priority, setPriority] = useState(
     task?.priority?.toUpperCase() || PRIORIRY[2]
   );
@@ -76,6 +78,7 @@ const AddTask = ({ open, setOpen, task }) => {
         stage,
         priority,
       };
+
       const res = task?._id
         ? await updateTask({ ...newData, _id: task._id }).unwrap()
         : await createTask(newData).unwrap();
@@ -131,17 +134,18 @@ const AddTask = ({ open, setOpen, task }) => {
             as="h2"
             className="text-base font-bold leading-6 text-gray-900 mb-4"
           >
-            {task ? "UPDATE TASK" : "ADD TASK"}
+            {task ? "CHỈNH SỬA" : "TẠO MỚI"}
           </Dialog.Title>
 
           <div className="mt-2 flex flex-col gap-6">
             <Textbox
-              placeholder="Task Title"
+              defaultValue={task?.title}
+              placeholder={task?.title || "Tiêu đề"}
               type="text"
               name="title"
-              label="Task Title"
+              label="Tiêu đề"
               className="w-full rounded"
-              register={register("title", { required: "Title is required" })}
+              register={register("title", { required: "Cần nhập tiêu đề" })}
               error={errors.title ? errors.title.message : ""}
             />
 
@@ -149,7 +153,7 @@ const AddTask = ({ open, setOpen, task }) => {
 
             <div className="flex gap-4">
               <SelectList
-                label="Task Stage"
+                label="Trạng thái"
                 lists={LISTS}
                 selected={stage}
                 setSelected={setStage}
@@ -157,22 +161,22 @@ const AddTask = ({ open, setOpen, task }) => {
 
               <div className="w-full">
                 <Textbox
-                  placeholder="Date"
+                  placeholder="Deadline"
                   type="date"
-                  name="date"
-                  label="Task Date"
+                  name="deadline"
+                  label="Deadline"
                   className="w-full rounded"
-                  register={register("date", {
-                    required: "Date is required!",
+                  register={register("deadline", {
+                    // required: "Deadline is required!",
                   })}
-                  error={errors.date ? errors.date.message : ""}
+                  error={errors.deadline ? errors.deadline.message : ""}
                 />
               </div>
             </div>
 
             <div className="flex gap-4">
               <SelectList
-                label="Priority Level"
+                label="Độ ưu tiên"
                 lists={PRIORIRY}
                 selected={priority}
                 setSelected={setPriority}
@@ -192,7 +196,7 @@ const AddTask = ({ open, setOpen, task }) => {
                     multiple={true}
                   />
                   <BiImages />
-                  <span>Add Assets</span>
+                  <span>Đính kèm</span>
                 </label>
               </div>
             </div>
@@ -200,7 +204,7 @@ const AddTask = ({ open, setOpen, task }) => {
             <div className="bg-gray-50 py-6 sm:flex sm:flex-row-reverse gap-4">
               {uploading ? (
                 <span className="text-sm py-2 text-red-500">
-                  Uploading assets
+                  Đang tải đính kèm
                 </span>
               ) : (
                 <Button

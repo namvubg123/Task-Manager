@@ -1,23 +1,22 @@
 import Notice from "../models/notification.js";
 import Task from "../models/task.js";
 import User from "../models/user.js";
+import moment from "moment";
 
 export const createTask = async (req, res) => {
   try {
     const { userId } = req.user;
 
-    const { title, team, stage, date, priority, assets } = req.body;
+    const { title, team, stage, date, priority, assets, deadline } = req.body;
 
-    let text = "New task has been assigned to you";
+    let text = "Công việc mới được giao cho bạn";
     if (team?.length > 1) {
-      text = text + ` and ${team?.length - 1} others.`;
+      text = text + ` và ${team?.length - 1} người khác.`;
     }
-
+    const deadlineFormatted = moment(deadline).format("DD/MM/YYYY");
     text =
       text +
-      ` The task priority is set a ${priority} priority, so check and act accordingly. The task date is ${new Date(
-        date
-      ).toDateString()}. Thank you!!!`;
+      ` Độ ưu tiên là ${priority}. Hạn chót là ngày ${deadlineFormatted}. Thank you!!!`;
 
     const activity = {
       type: "assigned",
@@ -33,6 +32,7 @@ export const createTask = async (req, res) => {
       priority: priority.toLowerCase(),
       assets,
       activities: activity,
+      deadline,
     });
 
     await Notice.create({
@@ -280,12 +280,14 @@ export const createSubTask = async (req, res) => {
 export const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, date, team, stage, priority, assets } = req.body;
-
+    const { title, deadline, team, stage, priority, assets } = req.body;
+    if (!title || !deadline || !team || !stage || !priority || !assets) {
+      throw new Error("Invalid task data");
+    }
     const task = await Task.findById(id);
 
     task.title = title;
-    task.date = date;
+    task.deadline = deadline;
     task.priority = priority.toLowerCase();
     task.assets = assets;
     task.stage = stage.toLowerCase();
@@ -295,7 +297,7 @@ export const updateTask = async (req, res) => {
 
     res
       .status(200)
-      .json({ status: true, message: "Task duplicated successfully." });
+      .json({ status: true, message: "Task update successfully!" });
   } catch (error) {
     console.log(error);
     return res.status(400).json({ status: false, message: error.message });

@@ -6,6 +6,8 @@ import morgan from "morgan";
 import { errorHandler, routeNotFound } from "./middlewares/errorMiddlewaves.js";
 import routes from "./routes/index.js";
 import { dbConnection } from "./utils/index.js";
+import schedule from "node-schedule";
+import Task from "./models/task.js";
 
 dotenv.config();
 
@@ -14,6 +16,25 @@ dbConnection();
 const PORT = process.env.PORT || 5000;
 
 const app = express();
+
+const dailyTaskCheck = schedule.scheduleJob("*/1 * * * *", async () => {
+  const currentDate = new Date();
+  const tasks = await Task.find({
+    stage: "todo",
+    deadline: { $lte: currentDate },
+  });
+
+  dailyTaskCheck.invoke();
+
+  tasks.forEach(async (task) => {
+    if (task.stage === "pending") {
+      return;
+    }
+
+    task.stage = "expired";
+    await task.save();
+  });
+});
 
 app.use(
   cors({
@@ -34,4 +55,4 @@ app.use("/api", routes);
 app.use(routeNotFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));

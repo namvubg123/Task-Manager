@@ -131,7 +131,7 @@ const TaskDialog = ({ task }) => {
                         className="mr-2 h-5 w-5 text-red-400"
                         aria-hidden="true"
                       />
-                      Delete
+                      Xóa
                     </button>
                   )}
                 </Menu.Item>

@@ -14,22 +14,19 @@ import {
 import { RxActivityLog } from "react-icons/rx";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { tasks } from "../assets/data";
+// import { tasks } from "../assets/data";
 import Tabs from "../components/Tabs";
 import { PRIOTITYSTYELS, TASK_TYPE, getInitials } from "../utils";
 import Loading from "../components/Loader";
-import Button from "../components/Button";
+// import Button from "../components/Button";
 import {
   useGetSingleTaskQuery,
   usePostTaskActivityMutation,
+  useUpdateTaskMutation,
 } from "../redux/slices/api/taskApi";
-
-// const assets = [
-//   "https://images.pexels.com/photos/2418664/pexels-photo-2418664.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-//   "https://images.pexels.com/photos/8797307/pexels-photo-8797307.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-//   "https://images.pexels.com/photos/2534523/pexels-photo-2534523.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-//   "https://images.pexels.com/photos/804049/pexels-photo-804049.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-// ];
+import { Button, Flex } from "antd";
+import { EditOutlined } from "@ant-design/icons";
+import { useSelector } from "react-redux";
 
 const ICONS = {
   high: <MdKeyboardDoubleArrowUp />,
@@ -74,7 +71,7 @@ const TASKTYPEICON = {
       <MdOutlineDoneAll size={24} />
     </div>
   ),
-  "in progress": (
+  pending: (
     <div className="w-8 h-8 flex items-center justify-center rounded-full bg-violet-600 text-white">
       <GrInProgress size={16} />
     </div>
@@ -84,7 +81,7 @@ const TASKTYPEICON = {
 const act_types = [
   "Started",
   "Completed",
-  "In Progress",
+  "Pending",
   "Commented",
   "Bug",
   "Assigned",
@@ -95,6 +92,39 @@ const TaskDetails = () => {
   const { data, isLoading, refetch } = useGetSingleTaskQuery(id);
   const [selected, setSelected] = useState(0);
   const task = data?.task;
+  const { user } = useSelector((state) => state.auth);
+
+  const [updateTask, { isLoading: isUpdating }] = useUpdateTaskMutation();
+  const submitHandler = async () => {
+    try {
+      if (!task) {
+        throw new Error("Task data not available");
+      }
+
+      const updatedStage = task.stage === "pending" ? "completed" : "pending";
+
+      const response = await updateTask({
+        _id: task._id,
+        title: task.title,
+        deadline: task.deadline,
+        team: task.team,
+        stage: updatedStage,
+        priority: task.priority,
+        assets: task.assets,
+      });
+
+      if (response.data?.status) {
+        toast.success("Cập nhật công việc thành công!");
+        refetch(); // Refetch data to update the UI
+      } else {
+        console.error("Error updating task:", response.data?.message);
+        toast.error(response.data?.message || response.error);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.data?.message || error.error);
+    }
+  };
 
   if (isLoading)
     return (
@@ -134,10 +164,39 @@ const TaskDetails = () => {
                     />
                     <span className="text-black uppercase">{task?.stage}</span>
                   </div>
+                  <div>
+                    {user?.isAdmin ? (
+                      <Button
+                        type="primary"
+                        className="bg-green-500 hover:bg-green-200"
+                        onClick={submitHandler}
+                      >
+                        <span className="flex items-center">
+                          <EditOutlined style={{ marginRight: "5px" }} />
+                          DUYỆT
+                        </span>
+                      </Button>
+                    ) : (
+                      <Button
+                        type="primary"
+                        className="bg-green-500 hover:bg-green-200"
+                        onClick={submitHandler}
+                      >
+                        <span className="flex items-center">
+                          <EditOutlined style={{ marginRight: "5px" }} />
+                          HOÀN THÀNH
+                        </span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 <p className="text-gray-500">
                   Ngày tạo: {new Date(task?.date).toLocaleDateString("vi-VN")}
+                </p>
+                <p className="text-gray-500">
+                  Deadline:{" "}
+                  {new Date(task?.deadline).toLocaleDateString("vi-VN")}
                 </p>
 
                 <div className="flex items-center gap-8 p-4 border-y border-gray-200">
@@ -344,11 +403,12 @@ const Activities = ({ activity, id, refetch }) => {
             <Loading />
           ) : (
             <Button
-              type="button"
-              label="Submit"
+              type="primary"
               onClick={handleSubmit}
-              className="bg-blue-600 text-white rounded"
-            />
+              className="bg-blue-500 hover:bg-blue-200"
+            >
+              Đăng
+            </Button>
           )}
         </div>
       </div>

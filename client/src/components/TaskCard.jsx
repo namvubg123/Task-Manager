@@ -14,6 +14,7 @@ import { FaList } from "react-icons/fa";
 import UserInfo from "./UserInfo";
 import { IoMdAdd } from "react-icons/io";
 import AddSubTask from "./task/AddSubTask";
+import { useNavigate } from "react-router-dom";
 
 const ICONS = {
   high: <MdKeyboardDoubleArrowUp />,
@@ -24,6 +25,7 @@ const ICONS = {
 const TaskCard = ({ task }) => {
   const { user } = useSelector((state) => state.auth);
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -36,22 +38,29 @@ const TaskCard = ({ task }) => {
             )}
           >
             <span className="text-lg">{ICONS[task?.priority]}</span>
-            <span className="uppercase">{task?.priority} Priority</span>
+            <span className="uppercase">
+              {task?.priority === "high" && "QUAN TRỌNG"}
+              {task?.priority === "medium" && "Trung Bình"}
+              {task?.priority === "normal" && "Bình thường"}
+              {task?.priority === "low" && "Thấp"}{" "}
+            </span>
           </div>
 
           {user?.isAdmin && <TaskDialog task={task} />}
         </div>
 
         <>
-          <div className="flex items-center gap-2">
-            <div
-              className={clsx("w-4 h-4 rounded-full", TASK_TYPE[task.stage])}
-            />
-            <h4 className="line-clamp-1 text-black">{task?.title}</h4>
+          <div onClick={() => navigate(`/task/${task._id}`)}>
+            <div className="flex items-center gap-2">
+              <div
+                className={clsx("w-4 h-4 rounded-full", TASK_TYPE[task.stage])}
+              />
+              <h4 className="line-clamp-1 text-black">{task?.title}</h4>
+            </div>
+            <span className="text-sm text-gray-600">
+              {formatDate(new Date(task?.deadline))}
+            </span>
           </div>
-          <span className="text-sm text-gray-600">
-            {formatDate(new Date(task?.date))}
-          </span>
         </>
 
         <div className="w-full border-t border-gray-200 my-2" />
@@ -105,7 +114,7 @@ const TaskCard = ({ task }) => {
         ) : (
           <>
             <div className="py-4 border-t border-gray-200">
-              <span className="text-gray-500">No Sub Task</span>
+              <span className="text-gray-500">Không có công việc phụ</span>
             </div>
           </>
         )}

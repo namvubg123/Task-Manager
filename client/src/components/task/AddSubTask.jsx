@@ -53,7 +53,7 @@ const AddSubTask = ({ open, setOpen, id }) => {
             />
 
             <div className="flex items-center gap-4">
-              <Textbox
+              {/* <Textbox
                 placeholder="Date"
                 type="date"
                 name="date"
@@ -63,7 +63,7 @@ const AddSubTask = ({ open, setOpen, id }) => {
                   required: "Date is required!",
                 })}
                 error={errors.date ? errors.date.message : ""}
-              />
+              /> */}
               <Textbox
                 placeholder="Tag"
                 type="text"
