@@ -3,6 +3,7 @@ import mongoose, { Schema } from "mongoose";
 const taskSchema = new Schema(
   {
     title: { type: String, required: true },
+    description: { type: String, require: true },
     date: { type: Date, default: new Date() },
     deadline: { type: Date },
     priority: {
@@ -49,7 +50,9 @@ const taskSchema = new Schema(
     ],
     assets: [String],
     team: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    department: { type: Schema.Types.ObjectId, ref: "Department" },
     isTrashed: { type: Boolean, default: false },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

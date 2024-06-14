@@ -7,7 +7,16 @@ export const createTask = async (req, res) => {
   try {
     const { userId } = req.user;
 
-    const { title, team, stage, date, priority, assets, deadline } = req.body;
+    const {
+      title,
+      team,
+      stage,
+      date,
+      priority,
+      assets,
+      deadline,
+      description,
+    } = req.body;
 
     let text = "Công việc mới được giao cho bạn";
     if (team?.length > 1) {
@@ -26,6 +35,7 @@ export const createTask = async (req, res) => {
 
     const task = await Task.create({
       title,
+      description,
       team,
       stage: stage.toLowerCase(),
       date,
@@ -33,6 +43,7 @@ export const createTask = async (req, res) => {
       assets,
       activities: activity,
       deadline,
+      createdBy: userId,
     });
 
     await Notice.create({
@@ -66,20 +77,19 @@ export const duplicateTask = async (req, res) => {
     newTask.assets = task.assets;
     newTask.priority = task.priority;
     newTask.stage = task.stage;
+    newTask.description = task.description;
 
     await newTask.save();
 
     //alert users of the task
-    let text = "New task has been assigned to you";
+    let text = "Công việc vừa được giao cho bạn";
     if (task.team.length > 1) {
-      text = text + ` and ${task.team.length - 1} others.`;
+      text = text + ` và ${task.team.length - 1} người khác.`;
     }
-
+    const deadlineFormatted = moment(deadline).format("DD/MM/YYYY");
     text =
       text +
-      ` The task priority is set a ${
-        task.priority
-      } priority, so check and act accordingly. The task date is ${task.date.toDateString()}. Thank you!!!`;
+      ` Mức độ ưu tiên là ${task.priority}. Hạn chót là ngày ${deadlineFormatted}. Thank you!!!`;
 
     await Notice.create({
       team: task.team,
@@ -133,7 +143,7 @@ export const dashboardStatistics = async (req, res) => {
         })
           .populate({
             path: "team",
-            select: "name role title email",
+            select: "name role title email department",
           })
           .sort({ _id: -1 })
       : await Task.find({
@@ -142,12 +152,12 @@ export const dashboardStatistics = async (req, res) => {
         })
           .populate({
             path: "team",
-            select: "name role title email",
+            select: "name role title email department",
           })
           .sort({ _id: -1 });
 
     const users = await User.find({ isActive: true })
-      .select("name title role isAdmin createdAt")
+      .select("name title role isAdmin createdAt department")
       .limit(10)
       .sort({ _id: -1 });
 
@@ -210,7 +220,7 @@ export const getTasks = async (req, res) => {
     let queryResult = Task.find(query)
       .populate({
         path: "team",
-        select: "name title email",
+        select: "name title email role department",
       })
       .sort({ _id: -1 });
 
@@ -233,7 +243,7 @@ export const getTask = async (req, res) => {
     const task = await Task.findById(id)
       .populate({
         path: "team",
-        select: "name title role email",
+        select: "name title role email department",
       })
       .populate({
         path: "activities.by",
@@ -280,13 +290,16 @@ export const createSubTask = async (req, res) => {
 export const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, deadline, team, stage, priority, assets } = req.body;
+    console.log(id);
+    const { title, deadline, team, stage, priority, assets, description } =
+      req.body;
     if (!title || !deadline || !team || !stage || !priority || !assets) {
       throw new Error("Invalid task data");
     }
     const task = await Task.findById(id);
 
     task.title = title;
+    task.description = description;
     task.deadline = deadline;
     task.priority = priority.toLowerCase();
     task.assets = assets;

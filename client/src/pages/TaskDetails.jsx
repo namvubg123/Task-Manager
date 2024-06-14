@@ -27,6 +27,7 @@ import {
 import { Button, Flex } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
+import "moment-timezone";
 
 const ICONS = {
   high: <MdKeyboardDoubleArrowUp />,
@@ -79,12 +80,12 @@ const TASKTYPEICON = {
 };
 
 const act_types = [
-  "Started",
-  "Completed",
-  "Pending",
-  "Commented",
-  "Bug",
-  "Assigned",
+  "Bắt đầu",
+  "Hoàn Thành",
+  "Chờ duyệt",
+  "Bình Luận",
+  "Lỗi",
+  "Phân công",
 ];
 
 const TaskDetails = () => {
@@ -93,15 +94,26 @@ const TaskDetails = () => {
   const [selected, setSelected] = useState(0);
   const task = data?.task;
   const { user } = useSelector((state) => state.auth);
-
+  const userRole = user?.role === "Giảng viên";
   const [updateTask, { isLoading: isUpdating }] = useUpdateTaskMutation();
+
   const submitHandler = async () => {
     try {
       if (!task) {
-        throw new Error("Task data not available");
+        throw new Error("Không có dữ liệu");
       }
 
-      const updatedStage = task.stage === "pending" ? "completed" : "pending";
+      if (task?.stage === "expired") {
+        throw new Error(
+          "Không thể cập nhật trạng thái cho công việc đã hết hạn!"
+        );
+      }
+
+      if (userRole && task.stage === "pending") {
+        throw new Error("Bạn không có quyền làm điều này!");
+      }
+
+      const updatedStage = task?.stage === "pending" ? "completed" : "pending";
 
       const response = await updateTask({
         _id: task._id,
@@ -111,6 +123,7 @@ const TaskDetails = () => {
         stage: updatedStage,
         priority: task.priority,
         assets: task.assets,
+        description: task.description,
       });
 
       if (response.data?.status) {
@@ -118,11 +131,11 @@ const TaskDetails = () => {
         refetch(); // Refetch data to update the UI
       } else {
         console.error("Error updating task:", response.data?.message);
-        toast.error(response.data?.message || response.error);
+        toast.error("Có lỗi xảy ra!");
       }
     } catch (error) {
       console.log(error);
-      toast.error(error?.data?.message || error.error);
+      toast.error(error?.data?.message || error);
     }
   };
 
@@ -152,7 +165,12 @@ const TaskDetails = () => {
                     )}
                   >
                     <span className="text-lg">{ICONS[task?.priority]}</span>
-                    <span className="uppercase">{task?.priority} Priority</span>
+                    <span className="uppercase">
+                      {task?.priority === "high" && "QUAN TRỌNG"}
+                      {task?.priority === "medium" && "Ưu tiên"}
+                      {task?.priority === "normal" && "Bình thường"}
+                      {task?.priority === "low" && "Thấp"}
+                    </span>
                   </div>
 
                   <div className={clsx("flex items-center gap-2")}>
@@ -162,7 +180,12 @@ const TaskDetails = () => {
                         TASK_TYPE[task.stage]
                       )}
                     />
-                    <span className="text-black uppercase">{task?.stage}</span>
+                    <span className="text-black uppercase">
+                      {task?.stage === "todo" && "CẦN LÀM"}
+                      {task?.stage === "pending" && "CHỜ DUYỆT"}
+                      {task?.stage === "completed" && "ĐÃ HOÀN THÀNH"}
+                      {task?.stage === "expired" && "QUÁ HẠN"}
+                    </span>
                   </div>
                   <div>
                     {user?.isAdmin ? (
@@ -198,6 +221,14 @@ const TaskDetails = () => {
                   Deadline:{" "}
                   {new Date(task?.deadline).toLocaleDateString("vi-VN")}
                 </p>
+                <p className="text-gray-500">
+                  Ngày hoàn thành:{" "}
+                  {task?.updatedAt && task?.stage === "completed" && (
+                    <span>
+                      {new Date(task?.updatedAt).toLocaleDateString("vi-VN")}
+                    </span>
+                  )}
+                </p>
 
                 <div className="flex items-center gap-8 p-4 border-y border-gray-200">
                   <div className="space-x-2">
@@ -214,31 +245,9 @@ const TaskDetails = () => {
                 </div>
 
                 <div className="space-y-4 py-6">
-                  <p className="text-gray-600 font-semibold test-sm">
-                    THÀNH VIÊN NHÓM
-                  </p>
-                  <div className="space-y-3">
-                    {task?.team?.map((m, index) => (
-                      <div
-                        key={index}
-                        className="flex gap-4 py-2 items-center border-t border-gray-200"
-                      >
-                        <div
-                          className={
-                            "w-10 h-10 rounded-full text-white flex items-center justify-center text-sm -mr-1 bg-blue-600"
-                          }
-                        >
-                          <span className="text-center">
-                            {getInitials(m?.name)}
-                          </span>
-                        </div>
-
-                        <div>
-                          <p className="text-lg font-semibold">{m?.name}</p>
-                          <span className="text-gray-500">{m?.title}</span>
-                        </div>
-                      </div>
-                    ))}
+                  <p className="text-gray-500 font-semibold text-sm">MÔ TẢ</p>
+                  <div className="space-y-4 py-6">
+                    <div className="text-gray-700">{task?.description} </div>
                   </div>
                 </div>
 
@@ -265,6 +274,35 @@ const TaskDetails = () => {
                           </div>
 
                           <p className="text-gray-700">{el?.title}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4 py-6">
+                  <p className="text-gray-600 font-semibold test-sm">
+                    THÀNH VIÊN NHÓM
+                  </p>
+                  <div className="space-y-3">
+                    {task?.team?.map((m, index) => (
+                      <div
+                        key={index}
+                        className="flex gap-4 py-2 items-center border-t border-gray-200"
+                      >
+                        <div
+                          className={
+                            "w-10 h-10 rounded-full text-white flex items-center justify-center text-sm -mr-1 bg-blue-600"
+                          }
+                        >
+                          <span className="text-center">
+                            {getInitials(m?.name)}
+                          </span>
+                        </div>
+
+                        <div>
+                          <p className="text-lg font-semibold">{m?.name}</p>
+                          <span className="text-gray-500">{m?.title}</span>
                         </div>
                       </div>
                     ))}
@@ -319,8 +357,16 @@ const Activities = ({ activity, id, refetch }) => {
 
   const handleSubmit = async () => {
     try {
+      const typeMapping = {
+        "Bắt đầu": "started",
+        "Hoàn thành": "completed",
+        "Chờ duyệt": "pending",
+        "Bình luận": "commented",
+        Lỗi: "bug",
+        "Phân công": "assigned",
+      };
       const activityData = {
-        type: selected?.toLowerCase(),
+        type: typeMapping[selected]?.toLowerCase() || "commented",
         activity: text,
       };
       const result = await postActivity({
@@ -336,7 +382,17 @@ const Activities = ({ activity, id, refetch }) => {
     }
   };
 
+  const typeTranslations = {
+    started: "Bắt đầu",
+    completed: "Hoàn thành",
+    pending: "Chờ duyệt",
+    commented: "Bình luận",
+    bug: "Lỗi",
+    assigned: "Phân công",
+  };
+
   const Card = ({ item }) => {
+    const translatedType = typeTranslations[item?.type] || item?.type;
     return (
       <div className="flex space-x-4">
         <div className="flex flex-col items-center flex-shrink-0">
@@ -351,10 +407,16 @@ const Activities = ({ activity, id, refetch }) => {
         <div className="flex flex-col gap-y-1 mb-8">
           <p className="font-semibold">{item?.by?.name}</p>
           <div className="text-gray-500 space-y-2">
-            <span className="capitalize">{item?.type}</span>
-            <span className="text-sm">{moment(item?.date).fromNow()}</span>
+            <span className="capitalize">{translatedType} </span>
+            <span className="text-sm">
+              |{" "}
+              {moment(item?.date)
+                .tz("Asia/Ho_Chi_Minh")
+                .format("DD/MM/YYYY HH:mm")}{" "}
+              |
+            </span>
           </div>
-          <div className="text-gray-700">{item?.activity}</div>
+          <div className="text-gray-700">{item?.activity} </div>
         </div>
       </div>
     );
@@ -363,7 +425,7 @@ const Activities = ({ activity, id, refetch }) => {
   return (
     <div className="w-full flex gap-10 2xl:gap-20 min-h-screen px-10 py-8 bg-white shadow rounded-md justify-between overflow-y-auto">
       <div className="w-full md:w-1/2">
-        <h4 className="text-gray-600 font-semibold text-lg mb-5">Activities</h4>
+        <h4 className="text-gray-600 font-semibold text-lg mb-5">Hoạt động</h4>
 
         <div className="w-full">
           {activity?.map((el, index) => (
@@ -378,7 +440,7 @@ const Activities = ({ activity, id, refetch }) => {
 
       <div className="w-full md:w-1/3">
         <h4 className="text-gray-600 font-semibold text-lg mb-5">
-          Add Activity
+          Thêm hoạt động
         </h4>
         <div className="w-full flex flex-wrap gap-5">
           {act_types.map((item, index) => (

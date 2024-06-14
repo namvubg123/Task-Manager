@@ -49,7 +49,7 @@ const Login = () => {
           <div className="w-full md:max-w-lg 2xl:max-w-3xl flex flex-col items-center justify-center gap-5 md:gap-y-10 2xl:-mt-20">
             <span className="flex gap-1 py-1 px-3 border rounded-full text-sm md:text-base bordergray-300 text-gray-600"></span>
             <p className="flex flex-col gap-0 md:gap-4 text-4xl md:text-6xl 2xl:text-7xl font-black text-center text-blue-700">
-              <span></span>
+              <span>TaskHub</span>
               <span>Quản lý công việc</span>
             </p>
 
@@ -69,9 +69,9 @@ const Login = () => {
               <p className="text-blue-600 text-3xl font-bold text-center">
                 Chào mừng!
               </p>
-              <p className="text-center text-base text-gray-700 ">
+              {/* <p className="text-center text-base text-gray-700 ">
                 Keep all your credential safe.
-              </p>
+              </p> */}
             </div>
 
             <div className="flex flex-col gap-y-5">
@@ -87,7 +87,7 @@ const Login = () => {
                 error={errors.email ? errors.email.message : ""}
               />
               <Textbox
-                placeholder="your password"
+                placeholder="Mật khẩu"
                 type="password"
                 name="password"
                 label="Mật khẩu"

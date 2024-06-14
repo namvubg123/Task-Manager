@@ -1,138 +1,114 @@
-import React from "react";
-import { useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
-import ModalWrapper from "./ModalWrapper";
-import { Dialog } from "@headlessui/react";
-import Textbox from "./Textbox";
-import Loading from "./Loader";
-import Button from "./Button";
+import React, { useState } from "react";
+import { Modal, Form, Input, Select, Button, message } from "antd";
 import { useRegisterMutation } from "../redux/slices/api/authApi";
-import { toast } from "sonner";
 import { useUpdateUserMutation } from "../redux/slices/api/userApi";
 import { setCredentials } from "../redux/slices/authSlice";
+import { useGetDepartmentsQuery } from "../redux/slices/api/departmentApi";
+import { useSelector } from "react-redux";
+import { toast } from "sonner";
 
 const AddUser = ({ open, setOpen, userData }) => {
-  let defaultValues = userData ?? {};
   const { user } = useSelector((state) => state.auth);
+  const [form] = Form.useForm();
+  const { Option } = Select;
+  const [userId, setUserId] = useState("");
 
-  // const isUpdating = false;
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({ defaultValues });
-
-  const dispatch = useDispatch();
   const [addNewUser, { isLoading }] = useRegisterMutation();
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+  const { data: departmentData } = useGetDepartmentsQuery();
 
-  const handleOnSubmit = async (data) => {
+  const handleOnSubmit = async (values) => {
     try {
       if (userData) {
-        const result = await updateUser(data).unwrap();
+        const result = await updateUser({
+          ...values,
+          _id: userData?._id,
+        }).unwrap();
+        message.success("Cập nhật thành công");
 
-        toast.success("Cập nhật thành công");
-
-        if (userData?._id === user._id)
-          dispatch(setCredentials({ ...result.user }));
+        if (userData._id === user._id) {
+          setCredentials({ ...result.user });
+        }
       } else {
         await addNewUser({
-          ...data,
-          password: data.email,
+          ...values,
+          password: values.email,
         }).unwrap();
 
-        toast.success("Tạo thành công ");
+        message.success("Tạo thành công");
       }
       setTimeout(() => {
         setOpen(false);
       }, 1500);
     } catch (error) {
-      toast.error("Lỗi");
+      toast.error(error.data.message);
+      console.log(error.data.message);
     }
   };
 
   return (
-    <>
-      <ModalWrapper open={open} setOpen={setOpen}>
-        <form onSubmit={handleSubmit(handleOnSubmit)} className="">
-          <Dialog.Title
-            as="h2"
-            className="text-base font-bold leading-6 text-gray-900 mb-4"
-          >
-            {userData ? "UPDATE PROFILE" : "ADD NEW USER"}
-          </Dialog.Title>
-          <div className="mt-2 flex flex-col gap-6">
-            <Textbox
-              placeholder="Họ và tên"
-              type="text"
-              name="name"
-              label="Họ và tên"
-              className="w-full rounded"
-              register={register("name", {
-                required: "Full name is required!",
-              })}
-              error={errors.name ? errors.name.message : ""}
-            />
-            <Textbox
-              placeholder="Title"
-              type="text"
-              name="title"
-              label="Title"
-              className="w-full rounded"
-              register={register("title", {
-                required: "Title is required!",
-              })}
-              error={errors.title ? errors.title.message : ""}
-            />
-            <Textbox
-              placeholder="Email "
-              type="email"
-              name="email"
-              label="Email "
-              className="w-full rounded"
-              register={register("email", {
-                required: "Email Address is required!",
-              })}
-              error={errors.email ? errors.email.message : ""}
-            />
+    <Modal open={open} onCancel={() => setOpen(false)} footer={null}>
+      <Form
+        form={form}
+        onFinish={handleOnSubmit}
+        style={{ margin: "30px 0px" }}
+        initialValues={userData}
+      >
+        <Form.Item name="_id" style={{ display: "none" }}>
+          <Input type="hidden" />
+        </Form.Item>
+        <Form.Item
+          label="Họ và tên"
+          name="name"
+          rules={[{ required: true, message: "Họ và tên là bắt buộc!" }]}
+        >
+          <Input placeholder="Họ và tên" />
+        </Form.Item>
+        <Form.Item
+          label="Bộ môn"
+          name="department"
+          rules={[{ required: true, message: "Bộ môn là bắt buộc!" }]}
+        >
+          <Select placeholder="Chọn bộ môn">
+            {departmentData &&
+              departmentData.map((department) => (
+                <Option key={department._id} value={department._id}>
+                  {department.name}
+                </Option>
+              ))}
+          </Select>
+        </Form.Item>
+        <Form.Item
+          label="Email"
+          name="email"
+          rules={[{ required: true, message: "Email là bắt buộc!" }]}
+        >
+          <Input placeholder="Email" />
+        </Form.Item>
+        <Form.Item
+          label="Chức vụ"
+          name="role"
+          rules={[{ required: true, message: "Chức vụ là bắt buộc!" }]}
+        >
+          <Select placeholder="Chọn chức vụ">
+            <Option value="Trưởng bộ môn">Trưởng bộ môn</Option>
+            <Option value="Giảng viên">Giảng viên</Option>
+          </Select>
+        </Form.Item>
 
-            <Textbox
-              placeholder="Chức vụ"
-              type="text"
-              name="role"
-              label="Chức vụ"
-              className="w-full rounded"
-              register={register("role", {
-                required: "User role is required!",
-              })}
-              error={errors.role ? errors.role.message : ""}
-            />
-          </div>
-
-          {isLoading || isUpdating ? (
-            <div className="py-5">
-              <Loading />
-            </div>
-          ) : (
-            <div className="py-3 mt-4 sm:flex sm:flex-row-reverse">
-              <Button
-                type="submit"
-                className="bg-blue-600 px-8 text-sm font-semibold text-white hover:bg-blue-700  sm:w-auto"
-                label="Submit"
-              />
-
-              <Button
-                type="button"
-                className="bg-white px-5 text-sm font-semibold text-gray-900 sm:w-auto"
-                onClick={() => setOpen(false)}
-                label="Cancel"
-              />
-            </div>
-          )}
-        </form>
-      </ModalWrapper>
-    </>
+        <Button
+          className="bg-blue-500"
+          htmlType="submit"
+          type="primary"
+          loading={isLoading || isUpdating}
+        >
+          {userData ? "Cập nhật" : "Tạo"}
+        </Button>
+        <Button style={{ margin: "0px 5px" }} onClick={() => setOpen(false)}>
+          Hủy
+        </Button>
+      </Form>
+    </Modal>
   );
 };
 

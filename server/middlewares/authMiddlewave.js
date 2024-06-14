@@ -22,13 +22,13 @@ const protectRoute = async (req, res, next) => {
     } else {
       return res
         .status(401)
-        .json({ status: false, message: "Not authorized. Try login again." });
+        .json({ status: false, message: "Xác thực thất bại. Hãy đăng nhập!" });
     }
   } catch (error) {
     console.error(error);
     return res
       .status(401)
-      .json({ status: false, message: "Not authorized. Try login again." });
+      .json({ status: false, message: "Xác thực thất bại. Hãy đăng nhập!." });
   }
 };
 
@@ -38,9 +38,31 @@ const isAdminRoute = (req, res, next) => {
   } else {
     return res.status(401).json({
       status: false,
-      message: "Not authorized as admin. Try login as admin.",
+      message: "Bạn không có quyền làm việc này!",
     });
   }
 };
 
-export { isAdminRoute, protectRoute };
+const checkRole = (req, res, next) => {
+  if (req.user && req.user.role === "Trưởng bộ môn") {
+    next();
+  } else {
+    return res.status(401).json({
+      status: false,
+      message: "Bạn không có quyền làm việc này!",
+    });
+  }
+};
+
+const isAdminOrSpecialRole = (req, res, next) => {
+  if (req.user && (req.user.isAdmin || req.user.role === "Trưởng bộ môn")) {
+    next();
+  } else {
+    return res.status(401).json({
+      status: false,
+      message: "Bạn không có quyền làm việc này!",
+    });
+  }
+};
+
+export { isAdminRoute, protectRoute, checkRole, isAdminOrSpecialRole };

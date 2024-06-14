@@ -146,7 +146,7 @@ const Trash = () => {
           </span>
           <span className="">
             {item?.priority === "high" && "QUAN TRỌNG"}
-            {item?.priority === "medium" && "Trung Bình"}
+            {item?.priority === "medium" && "Ưu tiên"}
             {item?.priority === "normal" && "Bình thường"}
             {item?.priority === "low" && "Thấp"}
           </span>

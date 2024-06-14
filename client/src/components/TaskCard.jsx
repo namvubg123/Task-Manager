@@ -26,6 +26,7 @@ const TaskCard = ({ task }) => {
   const { user } = useSelector((state) => state.auth);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  console.log(task);
 
   return (
     <>
@@ -40,9 +41,9 @@ const TaskCard = ({ task }) => {
             <span className="text-lg">{ICONS[task?.priority]}</span>
             <span className="uppercase">
               {task?.priority === "high" && "QUAN TRỌNG"}
-              {task?.priority === "medium" && "Trung Bình"}
+              {task?.priority === "medium" && "Ưu tiên"}
               {task?.priority === "normal" && "Bình thường"}
-              {task?.priority === "low" && "Thấp"}{" "}
+              {task?.priority === "low" && "Thấp"}
             </span>
           </div>
 

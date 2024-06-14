@@ -2,18 +2,29 @@ import { response } from "express";
 import User from "../models/user.js";
 import { createJWT } from "../utils/index.js";
 import Notice from "../models/notification.js";
+import Department from "../models/department.js";
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password, isAdmin, role, title } = req.body;
+    const { name, email, password, isAdmin, role, title, phone, department } =
+      req.body;
 
     const userExist = await User.findOne({ email });
 
     if (userExist) {
       return res.status(400).json({
         status: false,
-        message: "User already exists",
+        message: "Người dùng đã tồn tại",
       });
+    }
+    if (role === "Trưởng bộ môn") {
+      const departmentExists = await Department.findById(department);
+      if (departmentExists.manager) {
+        return res.status(400).json({
+          status: false,
+          message: "Bộ môn này đã có trưởng bộ môn",
+        });
+      }
     }
 
     const user = await User.create({
@@ -23,10 +34,15 @@ export const registerUser = async (req, res) => {
       isAdmin,
       role,
       title,
+      phone,
+      department,
     });
 
     if (user) {
       isAdmin ? createJWT(res, user._id) : null;
+      if (role === "Trưởng bộ môn") {
+        await Department.findByIdAndUpdate(department, { manager: user._id });
+      }
 
       user.password = undefined;
 
@@ -49,9 +65,10 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res
-        .status(401)
-        .json({ status: false, message: "Invalid email or password." });
+      return res.status(401).json({
+        status: false,
+        message: "Email không tồn tại hoặc mật khẩu sai!",
+      });
     }
 
     if (!user?.isActive) {
@@ -70,9 +87,10 @@ export const loginUser = async (req, res) => {
 
       res.status(200).json(user);
     } else {
-      return res
-        .status(401)
-        .json({ status: false, message: "Invalid email or password" });
+      return res.status(401).json({
+        status: false,
+        message: "Email không tồn tại hoặc mật khẩu sai!",
+      });
     }
   } catch (error) {
     console.log(error);
@@ -96,7 +114,12 @@ export const logoutUser = async (req, res) => {
 
 export const getTeamList = async (req, res) => {
   try {
-    const users = await User.find().select("name title role email isActive");
+    const users = await User.find()
+      .select("name title role email phone isActive department")
+      .populate({
+        path: "department",
+        select: "name ",
+      });
 
     res.status(200).json(users);
   } catch (error) {
@@ -124,7 +147,7 @@ export const getNotificationsList = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
   try {
     const { userId, isAdmin } = req.user;
-    const { _id } = req.body;
+    const { _id, role, department } = req.body;
 
     const id =
       isAdmin && userId === _id
@@ -139,6 +162,19 @@ export const updateUserProfile = async (req, res) => {
       user.name = req.body.name || user.name;
       user.title = req.body.title || user.title;
       user.role = req.body.role || user.role;
+      user.department = req.body.department || user.department;
+
+      if (role === "Trưởng bộ môn") {
+        const departmentExists = await Department.findById(department);
+        if (departmentExists.manager) {
+          return res.status(400).json({
+            status: false,
+            message: "Bộ môn này đã có trưởng bộ môn",
+          });
+        } else {
+          await Department.findByIdAndUpdate(department, { manager: user._id });
+        }
+      }
 
       const updatedUser = await user.save();
 
@@ -146,11 +182,13 @@ export const updateUserProfile = async (req, res) => {
 
       res.status(201).json({
         status: true,
-        message: "Profile Updated Successfully.",
+        message: "Update thông tin thành công!.",
         user: updatedUser,
       });
     } else {
-      res.status(404).json({ status: false, message: "User not found" });
+      res
+        .status(404)
+        .json({ status: false, message: "Người dùng không tồn tại!" });
     }
   } catch (error) {
     console.log(error);
@@ -200,10 +238,12 @@ export const changeUserPassword = async (req, res) => {
 
       res.status(201).json({
         status: true,
-        message: `Password chnaged successfully.`,
+        message: `Thay đổi mật khẩu thành công.`,
       });
     } else {
-      res.status(404).json({ status: false, message: "User not found" });
+      res
+        .status(404)
+        .json({ status: false, message: "Không tìm thấy người dùng" });
     }
   } catch (error) {
     console.log(error);
@@ -245,7 +285,7 @@ export const deleteUserProfile = async (req, res) => {
 
     res
       .status(200)
-      .json({ status: true, message: "User deleted successfully" });
+      .json({ status: true, message: "Xóa người dùng thành công" });
   } catch (error) {
     console.log(error);
     return res.status(400).json({ status: false, message: error.message });

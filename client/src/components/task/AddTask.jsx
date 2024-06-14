@@ -22,17 +22,18 @@ import { toast } from "sonner";
 import { dateFormatter } from "../../utils";
 
 const LISTS = ["TODO", "PENDING", "COMPLETED", "LATE", "EXPIRED"];
-const PRIORIRY = ["HIGH", "MEDIUM", "NORMAL", "LOW"];
+const PRIORITY = ["HIGH", "MEDIUM", "NORMAL", "LOW"];
 
 const uploadedFileURLs = [];
 
 const AddTask = ({ open, setOpen, task }) => {
   const defaultValues = {
     title: task?.title || "",
+    description: "",
     date: dateFormatter(task?.date || new Date()),
     deadline: dateFormatter(task?.date),
     team: [],
-    stage: "",
+    stage: "TODO",
     priority: "",
     assets: [],
   };
@@ -48,8 +49,9 @@ const AddTask = ({ open, setOpen, task }) => {
   const [stage, setStage] = useState(task?.stage?.toUpperCase() || LISTS[0]);
 
   const [priority, setPriority] = useState(
-    task?.priority?.toUpperCase() || PRIORIRY[2]
+    task?.priority?.toUpperCase() || PRIORITY[2]
   );
+
   const [assets, setAssets] = useState([]);
   const [uploading, setUploading] = useState(false);
 
@@ -83,7 +85,7 @@ const AddTask = ({ open, setOpen, task }) => {
         ? await updateTask({ ...newData, _id: task._id }).unwrap()
         : await createTask(newData).unwrap();
 
-      toast.success(res?.message);
+      toast.success("Tạo công việc thành công");
       setTimeout(() => {
         setOpen(false);
       }, 500);
@@ -148,16 +150,26 @@ const AddTask = ({ open, setOpen, task }) => {
               register={register("title", { required: "Cần nhập tiêu đề" })}
               error={errors.title ? errors.title.message : ""}
             />
+            <Textbox
+              defaultValue={task?.description}
+              placeholder={task?.description || "Mô tả"}
+              type="text"
+              name="description"
+              label="Mô tả"
+              className="w-full rounded"
+              register={register("description", { required: "Cần nhập mô tả" })}
+              error={errors.description ? errors.description.message : ""}
+            />
 
             <UserList setTeam={setTeam} team={team} />
 
             <div className="flex gap-4">
-              <SelectList
+              {/* <SelectList
                 label="Trạng thái"
                 lists={LISTS}
                 selected={stage}
                 setSelected={setStage}
-              />
+              /> */}
 
               <div className="w-full">
                 <Textbox
@@ -177,7 +189,7 @@ const AddTask = ({ open, setOpen, task }) => {
             <div className="flex gap-4">
               <SelectList
                 label="Độ ưu tiên"
-                lists={PRIORIRY}
+                lists={PRIORITY}
                 selected={priority}
                 setSelected={setPriority}
               />
@@ -208,7 +220,7 @@ const AddTask = ({ open, setOpen, task }) => {
                 </span>
               ) : (
                 <Button
-                  label="Submit"
+                  label="Tạo mới"
                   type="submit"
                   className="bg-blue-600 px-8 text-sm font-semibold text-white hover:bg-blue-700  sm:w-auto"
                 />
@@ -218,7 +230,7 @@ const AddTask = ({ open, setOpen, task }) => {
                 type="button"
                 className="bg-white px-5 text-sm font-semibold text-gray-900 sm:w-auto"
                 onClick={() => setOpen(false)}
-                label="Cancel"
+                label="Hủy"
               />
             </div>
           </div>

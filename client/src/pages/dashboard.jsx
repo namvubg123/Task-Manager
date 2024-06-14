@@ -54,7 +54,7 @@ const TaskTable = ({ tasks }) => {
           </span>
           <span className="capitalize">
             {task?.priority === "high" && "QUAN TRỌNG"}
-            {task?.priority === "medium" && "Trung Bình"}
+            {task?.priority === "medium" && "Ưu tiên"}
             {task?.priority === "normal" && "Bình thường"}
             {task?.priority === "low" && "Thấp"}
           </span>
@@ -105,8 +105,8 @@ const UserTable = ({ users }) => {
     <thead className="border-b border-gray-300 ">
       <tr className="text-black  text-left">
         <th className="py-2">Tên</th>
-        <th className="py-2">Trạng thái</th>
         <th className="py-2"></th>
+        <th className="py-2">Ngày tham gia</th>
       </tr>
     </thead>
   );
@@ -227,13 +227,13 @@ const Dashboard = () => {
           <Card key={index} icon={icon} bg={bg} label={label} count={total} />
         ))}
       </div>
-
+      {/* 
       <div className="w-full bg-white my-16 p-4 rounded shadow-sm">
         <h4 className="text-xl text-gray-600 font-semibold">
           Chart by Priority
         </h4>
         <Chart data={data?.graphData} />
-      </div>
+      </div> */}
 
       <div className="w-full flex flex-col md:flex-row gap-4 2xl:gap-10 py-8">
         {/* /left */}
@@ -242,7 +242,7 @@ const Dashboard = () => {
 
         {/* /right */}
 
-        <UserTable users={data?.users} />
+        {/* <UserTable users={data?.users} /> */}
       </div>
     </div>
   );

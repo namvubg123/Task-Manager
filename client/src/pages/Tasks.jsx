@@ -13,6 +13,7 @@ import BoardView from "../components/BoardView";
 import Table from "../components/task/Table";
 import AddTask from "../components/task/AddTask";
 import { useGetAllTaskQuery } from "../redux/slices/api/taskApi";
+import { useSelector } from "react-redux";
 
 const TABS = [
   { title: " Bảng", icon: <MdGridView /> },
@@ -29,6 +30,8 @@ const TASK_TYPE = {
 
 const Tasks = () => {
   const params = useParams();
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user?.role === "Giảng viên";
 
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
@@ -40,6 +43,7 @@ const Tasks = () => {
     isTrashed: "",
     search: "",
   });
+  console.log(data);
 
   return isLoading ? (
     <div className="py-10">
@@ -48,9 +52,9 @@ const Tasks = () => {
   ) : (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <Title title={status ? `${status} Tasks` : "Tasks"} />
+        <Title title={"Công Việc"} />
 
-        {!status && (
+        {!status && !userRole && (
           <Button
             onClick={() => setOpen(true)}
             label="Thêm công việc"

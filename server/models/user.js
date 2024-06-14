@@ -5,12 +5,18 @@ const userSchema = new Schema(
   {
     name: { type: String, required: true },
     title: { type: String },
-    role: { type: String },
+    role: {
+      type: String,
+      enum: ["Trưởng bộ môn", "Giảng viên"],
+      required: true,
+    },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isAdmin: { type: Boolean, required: true, default: false },
     tasks: [{ type: Schema.Types.ObjectId, ref: "Task" }],
     isActive: { type: Boolean, required: true, default: true },
+    department: { type: Schema.Types.ObjectId, ref: "Department" },
+    phone: { type: String, require: true },
   },
   { timestamps: true }
 );

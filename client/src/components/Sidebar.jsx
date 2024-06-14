@@ -1,4 +1,5 @@
 import React from "react";
+import { Menu } from "antd";
 import {
   MdDashboard,
   MdOutlineAddTask,
@@ -11,6 +12,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 import { setOpenSidebar } from "../redux/slices/authSlice";
 import clsx from "clsx";
+import { TeamOutlined } from "@ant-design/icons";
+
+const { SubMenu } = Menu;
 
 const linkData = [
   {
@@ -49,6 +53,11 @@ const linkData = [
     icon: <FaUsers />,
   },
   {
+    label: "Bộ môn",
+    link: "department",
+    icon: <TeamOutlined />,
+  },
+  {
     label: "Thùng rác",
     link: "trashed",
     icon: <FaTrashAlt />,
@@ -57,35 +66,18 @@ const linkData = [
 
 const Sidebar = () => {
   const { user } = useSelector((state) => state.auth);
-
   const dispatch = useDispatch();
   const location = useLocation();
-
   const path = location.pathname.split("/")[1];
 
-  const sidebarLinks = user?.isAdmin ? linkData : linkData.slice(0, 5);
+  const sidebarLinks = user?.isAdmin ? linkData : linkData.slice(0, 7);
 
   const closeSidebar = () => {
     dispatch(setOpenSidebar(false));
   };
 
-  const NavLink = ({ el }) => {
-    return (
-      <Link
-        to={el.link}
-        onClick={closeSidebar}
-        className={clsx(
-          "w-full lg:w-3/4 flex gap-2 px-3 py-2 rounded-full items-center text-gray-800 text-base hover:bg-[#2564ed2d]",
-          path === el.link.split("/")[0] ? "bg-blue-700 text-neutral-100" : ""
-        )}
-      >
-        {el.icon}
-        <span className="hover:text-[#2564ed]">{el.label}</span>
-      </Link>
-    );
-  };
   return (
-    <div className="w-full  h-full flex flex-col gap-6 p-5">
+    <div className="w-full h-full flex flex-col gap-6 p-5">
       <h1 className="flex gap-1 items-center">
         <p className="bg-blue-600 p-2 rounded-full">
           <MdOutlineAddTask className="text-white text-2xl font-black" />
@@ -94,9 +86,18 @@ const Sidebar = () => {
       </h1>
 
       <div className="flex-1 flex flex-col gap-y-5 py-8">
-        {sidebarLinks.map((link) => (
-          <NavLink el={link} key={link.label} />
-        ))}
+        <Menu
+          mode="vertical"
+          selectedKeys={[path]}
+          onClick={closeSidebar}
+          className="text-gray-800"
+        >
+          {sidebarLinks.map((link) => (
+            <Menu.Item key={link.link} icon={link.icon}>
+              <Link to={link.link}>{link.label}</Link>
+            </Menu.Item>
+          ))}
+        </Menu>
       </div>
 
       <div className="">

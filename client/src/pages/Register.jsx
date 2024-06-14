@@ -99,10 +99,21 @@ const Register = () => {
                 error={errors.email ? errors.email.message : ""}
               />
               <Textbox
-                placeholder="your password"
+                placeholder="Số điện thoại"
+                type="tel"
+                name="phone"
+                label="Số điện thoại"
+                className="w-full rounded-full"
+                register={register("phone", {
+                  required: "Phone Number is required!",
+                })}
+                error={errors.phone ? errors.phone.message : ""}
+              />
+              <Textbox
+                placeholder="Mật khẩu"
                 type="password"
                 name="password"
-                label="Password"
+                label="Mật khẩu"
                 className="w-full rounded-full"
                 register={register("password", {
                   required: "Password is required!",

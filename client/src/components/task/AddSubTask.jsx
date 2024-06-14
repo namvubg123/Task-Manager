@@ -81,14 +81,14 @@ const AddSubTask = ({ open, setOpen, id }) => {
             <Button
               type="submit"
               className="bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 sm:ml-3 sm:w-auto"
-              label="Add Task"
+              label="Tạo mới"
             />
 
             <Button
               type="button"
               className="bg-white border text-sm font-semibold text-gray-900 sm:w-auto"
               onClick={() => setOpen(false)}
-              label="Cancel"
+              label="Hủy"
             />
           </div>
         </form>

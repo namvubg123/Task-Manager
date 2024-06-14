@@ -16,6 +16,7 @@ import ConfirmatioDialog from "../Dialogs";
 import { useTrashTaskMutation } from "../../redux/slices/api/taskApi";
 import AddTask from "./AddTask";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const ICONS = {
   high: <MdKeyboardDoubleArrowUp />,
@@ -24,6 +25,8 @@ const ICONS = {
 };
 
 const Table = ({ tasks }) => {
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user?.role === "Giảng viên";
   const [openDialog, setOpenDialog] = useState(false);
   const [selected, setSelected] = useState(null);
   const [deleteTask] = useTrashTaskMutation();
@@ -89,7 +92,7 @@ const Table = ({ tasks }) => {
         <div className={"flex gap-1 items-center"}>
           <span className="capitalize line-clamp-1">
             {task?.priority === "high" && "QUAN TRỌNG"}
-            {task?.priority === "medium" && "Trung Bình"}
+            {task?.priority === "medium" && "Ưu tiên"}
             {task?.priority === "normal" && "Bình thường"}
             {task?.priority === "low" && "Thấp"}
           </span>
@@ -137,22 +140,23 @@ const Table = ({ tasks }) => {
           ))}
         </div>
       </td>
+      {!userRole && (
+        <td className="py-2 flex gap-2 md:gap-4 justify-end">
+          <Button
+            className="text-blue-600 hover:text-blue-500 sm:px-0 text-sm md:text-base"
+            label="Sửa"
+            type="button"
+            onClick={() => editTaskHandler(task)}
+          />
 
-      <td className="py-2 flex gap-2 md:gap-4 justify-end">
-        <Button
-          className="text-blue-600 hover:text-blue-500 sm:px-0 text-sm md:text-base"
-          label="Sửa"
-          type="button"
-          onClick={() => editTaskHandler(task)}
-        />
-
-        <Button
-          className="text-red-700 hover:text-red-500 sm:px-0 text-sm md:text-base"
-          label="Xóa"
-          type="button"
-          onClick={() => deleteClicks(task._id)}
-        />
-      </td>
+          <Button
+            className="text-red-700 hover:text-red-500 sm:px-0 text-sm md:text-base"
+            label="Xóa"
+            type="button"
+            onClick={() => deleteClicks(task._id)}
+          />
+        </td>
+      )}
     </tr>
   );
   return (
