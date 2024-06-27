@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Title from "../components/Title";
 import { IoMdAdd } from "react-icons/io";
 // import { summary } from "../assets/data";
@@ -8,13 +8,18 @@ import ConfirmatioDialog, { UserAction } from "../components/Dialogs";
 import AddUser from "../components/AddUser";
 import { useGetTeamListQuery } from "../redux/slices/api/userApi";
 import { toast } from "sonner";
-import { Table, Button, Drawer, Space } from "antd";
+import { Table, Button, Drawer, Space, Input, message } from "antd";
 import {
   useDeleteDepartmentMutation,
   useGetDepartmentsQuery,
 } from "../redux/slices/api/departmentApi";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import AddDepartment from "./../components/AddDepartment";
+import Highlighter from "react-highlight-words";
 
 const Department = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -24,22 +29,116 @@ const Department = () => {
   const [selectedToUpdate, setSelectedToUpdate] = useState(null);
 
   const { data, isLoading, refetch } = useGetDepartmentsQuery();
-
   const [deleteDepartment] = useDeleteDepartmentMutation();
   const { data: usersData } = useGetTeamListQuery();
+
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+  const searchInput = useRef(null);
+
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+
+  const handleReset = (clearFilters) => {
+    clearFilters();
+    setSearchText("");
+  };
+
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+      close,
+    }) => (
+      <div
+        style={{
+          padding: 8,
+        }}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <Input
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{
+            marginBottom: 8,
+            display: "block",
+          }}
+        />
+        <Space>
+          <Button
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Tìm kiếm
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Hủy
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined
+        style={{
+          color: filtered ? "#1677ff" : undefined,
+        }}
+      />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+    onFilterDropdownOpenChange: (visible) => {
+      if (visible) {
+        setTimeout(() => searchInput.current?.select(), 100);
+      }
+    },
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{
+            backgroundColor: "#ffc069",
+            padding: 0,
+          }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ""}
+        />
+      ) : (
+        text
+      ),
+  });
 
   const deleteHandler = async () => {
     try {
       const result = await deleteDepartment(selected);
       refetch();
-      toast.success("Xóa thành công");
+      message.success("Xóa thành công");
       setSelected(null);
       setTimeout(() => {
         setOpenDialog(false);
       }, 500);
     } catch (error) {
       console.log(err);
-      toast.error(err?.data?.message || err.error);
+      message.error(err?.data?.message || err.error);
     }
   };
 
@@ -48,8 +147,10 @@ const Department = () => {
       (user) => user.department?._id === departmentId
     );
     setSelected(filteredUsers);
+
     setOpenDrawer(true);
   };
+
   const onClose = () => {
     setOpenDrawer(false);
   };
@@ -63,13 +164,14 @@ const Department = () => {
     setSelectedToUpdate(el);
     setOpen(true);
   };
-
+  console.log(data);
   const columns = [
     {
       title: "Tên bộ môn",
       dataIndex: "name",
       align: "center",
       key: "name",
+      ...getColumnSearchProps("name"),
     },
     {
       title: "Trưởng bộ môn",
@@ -79,12 +181,12 @@ const Department = () => {
     },
     {
       title: "Các giảng viên",
-      dataIndex: "user",
+      dataIndex: "",
       align: "center",
-      key: "user",
+      key: "",
       render: (record) => (
         <div>
-          <Button onClick={() => showDrawer(record?._id)}>
+          <Button onClick={() => showDrawer(record._id)}>
             Danh sách giảng viên
           </Button>
         </div>
@@ -151,24 +253,28 @@ const Department = () => {
                 dataIndex: "name",
                 align: "center",
                 key: "name",
+                // ...getColumnSearchProps("name"),
               },
               {
                 title: "Chức vụ",
                 dataIndex: "role",
                 align: "center",
                 key: "role",
+                // ...getColumnSearchProps("role"),
               },
               {
                 title: "Email",
                 dataIndex: "email",
                 align: "center",
                 key: "email",
+                // ...getColumnSearchProps("email"),
               },
               {
                 title: "Số điện thoại",
                 dataIndex: "phone",
                 align: "center",
                 key: "phone",
+                // ...getColumnSearchProps("phone"),
               },
             ]}
             size="large"

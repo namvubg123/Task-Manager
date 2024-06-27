@@ -19,13 +19,8 @@ import {
 
 const router = express.Router();
 
-router.post("/create", protectRoute, isAdminOrSpecialRole, createTask);
-router.post(
-  "/duplicate/:id",
-  protectRoute,
-  isAdminOrSpecialRole,
-  duplicateTask
-);
+router.post("/create", protectRoute, createTask);
+router.post("/duplicate/:id", protectRoute, duplicateTask);
 router.post("/activity/:id", protectRoute, postTaskActivity);
 
 router.get("/dashboard", protectRoute, dashboardStatistics);
@@ -35,16 +30,16 @@ router.get("/:id", protectRoute, getTask);
 router.put(
   "/create-subtask/:id",
   protectRoute,
-  isAdminOrSpecialRole,
+
   createSubTask
 );
 router.put("/update/:id", protectRoute, updateTask);
-router.put("/:id", protectRoute, isAdminOrSpecialRole, trashTask);
+router.put("/:id", protectRoute, trashTask);
 
 router.delete(
   "/delete-restore/:id?",
   protectRoute,
-  isAdminOrSpecialRole,
+
   deleteRestoreTask
 );
 

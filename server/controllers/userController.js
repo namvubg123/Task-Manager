@@ -9,6 +9,16 @@ export const registerUser = async (req, res) => {
     const { name, email, password, isAdmin, role, title, phone, department } =
       req.body;
 
+    const passwordRegex =
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        status: false,
+        message:
+          "Mật khẩu phải có ít nhất 1 chữ viết hoa, 1 số và 1 ký tự đặc biệt",
+      });
+    }
+
     const userExist = await User.findOne({ email });
 
     if (userExist) {
@@ -114,12 +124,35 @@ export const logoutUser = async (req, res) => {
 
 export const getTeamList = async (req, res) => {
   try {
-    const users = await User.find()
-      .select("name title role email phone isActive department")
-      .populate({
-        path: "department",
-        select: "name ",
-      });
+    const { userId, isAdmin } = req.user;
+
+    let users;
+
+    if (isAdmin) {
+      users = await User.find()
+        .select("name title role email phone isActive department")
+        .populate({
+          path: "department",
+          select: "name ",
+        });
+    } else {
+      const user = await User.findById(userId);
+      console.log(user);
+      if (user.role === "Trưởng bộ môn" || user.role === "Giảng viên") {
+        users = await User.find({
+          department: user.department,
+        })
+          .select("name title role email phone isActive department")
+          .populate({
+            path: "department",
+            select: "name ",
+          });
+      } else {
+        return res
+          .status(403)
+          .json({ status: false, message: "Bạn không có quyền truy cập." });
+      }
+    }
 
     res.status(200).json(users);
   } catch (error) {
@@ -163,8 +196,13 @@ export const updateUserProfile = async (req, res) => {
       user.title = req.body.title || user.title;
       user.role = req.body.role || user.role;
       user.department = req.body.department || user.department;
+      user.phone = req.body.phone || user.phone;
 
-      if (role === "Trưởng bộ môn") {
+      const checkRole = await Department.findOne({
+        manager: _id,
+      });
+
+      if (role === "Trưởng bộ môn" && !checkRole) {
         const departmentExists = await Department.findById(department);
         if (departmentExists.manager) {
           return res.status(400).json({
@@ -226,11 +264,22 @@ export const markNotificationRead = async (req, res) => {
 export const changeUserPassword = async (req, res) => {
   try {
     const { userId } = req.user;
+    const { password } = req.body;
+
+    const passwordRegex =
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        status: false,
+        message:
+          "Mật khẩu phải có ít nhất 1 chữ viết hoa, 1 số và 1 ký tự đặc biệt",
+      });
+    }
 
     const user = await User.findById(userId);
 
     if (user) {
-      user.password = req.body.password;
+      user.password = password;
 
       await user.save();
 
@@ -280,6 +329,14 @@ export const activateUserProfile = async (req, res) => {
 export const deleteUserProfile = async (req, res) => {
   try {
     const { id } = req.params;
+
+    const user = await User.findById(id);
+
+    if (user.isAdmin) {
+      return res
+        .status(403)
+        .json({ status: false, message: "Không thể xóa tài khoản admin." });
+    }
 
     await User.findByIdAndDelete(id);
 

@@ -10,6 +10,7 @@ import { useLogoutMutation } from "../redux/slices/api/authApi";
 import { logout } from "../redux/slices/authSlice";
 import AddUser from "./AddUser";
 import ChangePassword from "./ChangePassword";
+import { message } from "antd";
 
 const UserAvatar = () => {
   const [open, setOpen] = useState(false);
@@ -25,8 +26,10 @@ const UserAvatar = () => {
       await logoutUser().unwrap();
       navigate("log-in");
       dispatch(logout());
-    } catch (error) {}
-    toast.error("Đăng xuất thất bại");
+      message.success("Đăng xuất thành công");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (

@@ -17,14 +17,19 @@ import {
   useGetAllTaskQuery,
 } from "../redux/slices/api/taskApi";
 import { PRIOTITYSTYELS, TASK_TYPE } from "../utils";
+import { message } from "antd";
+import { useSelector } from "react-redux";
 
 const ICONS = {
-  high: <MdKeyboardDoubleArrowUp />,
-  medium: <MdKeyboardArrowUp />,
-  low: <MdKeyboardArrowDown />,
+  "Ưu tiên": <MdKeyboardDoubleArrowUp />,
+  "Quan trọng": <MdKeyboardArrowUp />,
+  "Bình thường": <MdKeyboardArrowDown />,
 };
 
 const Trash = () => {
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user?.role === "Giảng viên";
+
   const [openDialog, setOpenDialog] = useState(false);
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -36,6 +41,10 @@ const Trash = () => {
     isTrashed: "true",
     search: "",
   });
+
+  const filteredData = data?.tasks.filter(
+    (task) => task.createdBy === user?._id
+  );
 
   const [deleteRestoreTask] = useDeleteRestoreTaskMutation();
 
@@ -71,14 +80,14 @@ const Trash = () => {
           break;
       }
 
-      toast.success(result?.message);
+      message.success(result?.message);
       setTimeout(() => {
         setOpenDialog(false);
         refetch();
       }, 500);
     } catch (error) {
       console.log(error);
-      toast.error(error?.data?.message || error.error);
+      message.error(error?.data?.message || error.error);
     }
   };
 
@@ -144,12 +153,7 @@ const Trash = () => {
           <span className={clsx("text-lg", PRIOTITYSTYELS[item?.priority])}>
             {ICONS[item?.priority]}
           </span>
-          <span className="">
-            {item?.priority === "high" && "QUAN TRỌNG"}
-            {item?.priority === "medium" && "Ưu tiên"}
-            {item?.priority === "normal" && "Bình thường"}
-            {item?.priority === "low" && "Thấp"}
-          </span>
+          <span className="">{item?.priority}</span>
         </div>
       </td>
 
@@ -180,28 +184,29 @@ const Trash = () => {
       <div className="w-full md:px-1 px-0 mb-6">
         <div className="flex items-center justify-between mb-8">
           <Title title="Trashed Tasks" />
-
-          <div className="flex gap-2 md:gap-4 items-center">
-            <Button
-              label="Khôi phục tất cả"
-              icon={<MdOutlineRestore className="text-lg hidden md:flex" />}
-              className="flex flex-row-reverse gap-1 items-center  text-black text-sm md:text-base rounded-md 2xl:py-2.5"
-              onClick={() => restoreAllClick()}
-            />
-            <Button
-              label="Xóa tất cả"
-              icon={<MdDelete className="text-lg hidden md:flex" />}
-              className="flex flex-row-reverse gap-1 items-center  text-red-600 text-sm md:text-base rounded-md 2xl:py-2.5"
-              onClick={() => deleteAllClick()}
-            />
-          </div>
+          {!userRole && (
+            <div className="flex gap-2 md:gap-4 items-center">
+              <Button
+                label="Khôi phục tất cả"
+                icon={<MdOutlineRestore className="text-lg hidden md:flex" />}
+                className="flex flex-row-reverse gap-1 items-center  text-black text-sm md:text-base rounded-md 2xl:py-2.5"
+                onClick={() => restoreAllClick()}
+              />
+              <Button
+                label="Xóa tất cả"
+                icon={<MdDelete className="text-lg hidden md:flex" />}
+                className="flex flex-row-reverse gap-1 items-center  text-red-600 text-sm md:text-base rounded-md 2xl:py-2.5"
+                onClick={() => deleteAllClick()}
+              />
+            </div>
+          )}
         </div>
         <div className="bg-white px-2 md:px-6 py-4 shadow-md rounded">
           <div className="overflow-x-auto">
             <table className="w-full mb-5">
               <TableHeader />
               <tbody>
-                {data?.tasks?.map((tk, id) => (
+                {filteredData?.map((tk, id) => (
                   <TableRow key={id} item={tk} />
                 ))}
               </tbody>

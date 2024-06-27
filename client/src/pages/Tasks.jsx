@@ -10,7 +10,7 @@ import Tabs from "../components/Tabs";
 // import TaskTitle from "../components/TaskTitle";
 import BoardView from "../components/BoardView";
 // import { tasks } from "../assets/data";
-import Table from "../components/task/Table";
+import TaskList from "../components/task/TaskList";
 import AddTask from "../components/task/AddTask";
 import { useGetAllTaskQuery } from "../redux/slices/api/taskApi";
 import { useSelector } from "react-redux";
@@ -45,6 +45,10 @@ const Tasks = () => {
   });
   console.log(data);
 
+  const filteredData = !userRole
+    ? data?.tasks.filter((task) => task.createdBy === user?._id)
+    : data?.tasks;
+
   return isLoading ? (
     <div className="py-10">
       <Loading />
@@ -54,14 +58,12 @@ const Tasks = () => {
       <div className="flex items-center justify-between mb-4">
         <Title title={"Công Việc"} />
 
-        {!status && !userRole && (
-          <Button
-            onClick={() => setOpen(true)}
-            label="Thêm công việc"
-            icon={<IoMdAdd className="text-lg" />}
-            className="flex flex-row-reverse gap-1 items-center bg-blue-600 text-white rounded-md py-2 2xl:py-2.5"
-          />
-        )}
+        <Button
+          onClick={() => setOpen(true)}
+          label="Thêm công việc"
+          icon={<IoMdAdd className="text-lg" />}
+          className="flex flex-row-reverse gap-1 items-center bg-blue-600 text-white rounded-md py-2 2xl:py-2.5"
+        />
       </div>
 
       <Tabs tabs={TABS} setSelected={setSelected}>
@@ -77,10 +79,10 @@ const Tasks = () => {
         )}
 
         {selected !== 1 ? (
-          <BoardView tasks={data?.tasks} />
+          <BoardView tasks={filteredData} />
         ) : (
           <div className="w-full">
-            <Table tasks={data?.tasks} />
+            <TaskList tasks={filteredData} />
           </div>
         )}
       </Tabs>

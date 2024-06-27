@@ -5,6 +5,7 @@ import Textbox from "../Textbox";
 import Button from "../Button";
 import { useCreateSubTaskMutation } from "../../redux/slices/api/taskApi";
 import { toast } from "sonner";
+import { message } from "antd";
 
 const AddSubTask = ({ open, setOpen, id }) => {
   const {
@@ -19,13 +20,13 @@ const AddSubTask = ({ open, setOpen, id }) => {
     try {
       const res = await addSbTask({ data, id }).unwrap();
 
-      toast.success("Thêm công việc phụ thành công");
+      message.success("Thêm công việc phụ thành công");
       setTimeout(() => {
         setOpen(false);
       }, 500);
     } catch (err) {
       console.log(err);
-      toast.error(err?.data?.message || err.error);
+      message.error(err?.data?.message || err.error);
     }
   };
 

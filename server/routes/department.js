@@ -16,13 +16,8 @@ const router = express.Router();
 
 router.get("/", protectRoute, getDepartments);
 router.get("/:id", protectRoute, getDepartmentById);
-router.post("/create", protectRoute, isAdminOrSpecialRole, createDepartment);
-router.put("/update", protectRoute, isAdminOrSpecialRole, updateDepartment);
-router.delete(
-  "/delete/:id",
-  protectRoute,
-  isAdminOrSpecialRole,
-  deleteDepartment
-);
+router.post("/create", protectRoute, createDepartment);
+router.put("/update", protectRoute, updateDepartment);
+router.delete("/delete/:id", protectRoute, deleteDepartment);
 
 export default router;

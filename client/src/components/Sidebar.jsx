@@ -53,24 +53,27 @@ const linkData = [
     icon: <FaUsers />,
   },
   {
-    label: "Bộ môn",
-    link: "department",
-    icon: <TeamOutlined />,
-  },
-  {
     label: "Thùng rác",
     link: "trashed",
     icon: <FaTrashAlt />,
+  },
+  {
+    label: "Bộ môn",
+    link: "department",
+    icon: <TeamOutlined />,
   },
 ];
 
 const Sidebar = () => {
   const { user } = useSelector((state) => state.auth);
+  const userRole = user?.role === "Giảng viên";
+
   const dispatch = useDispatch();
   const location = useLocation();
   const path = location.pathname.split("/")[1];
 
-  const sidebarLinks = user?.isAdmin ? linkData : linkData.slice(0, 7);
+  const sidebarLinks =
+    user?.isAdmin && !userRole ? linkData : linkData.slice(0, 8);
 
   const closeSidebar = () => {
     dispatch(setOpenSidebar(false));

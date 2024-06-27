@@ -24,21 +24,21 @@ import {
   usePostTaskActivityMutation,
   useUpdateTaskMutation,
 } from "../redux/slices/api/taskApi";
-import { Button, Flex } from "antd";
+import { Button, Flex, message } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import "moment-timezone";
 
 const ICONS = {
-  high: <MdKeyboardDoubleArrowUp />,
-  medium: <MdKeyboardArrowUp />,
-  low: <MdKeyboardArrowDown />,
+  "Ưu tiên": <MdKeyboardDoubleArrowUp />,
+  "Quan trọng": <MdKeyboardArrowUp />,
+  "Bình thường": <MdKeyboardArrowDown />,
 };
 
 const bgColor = {
-  high: "bg-red-200",
-  medium: "bg-yellow-200",
-  low: "bg-blue-200",
+  "Ưu tiên": "bg-red-200",
+  "Quan trọng": "bg-yellow-200",
+  "Bình thường": "bg-green-200",
 };
 
 const TABS = [
@@ -105,11 +105,15 @@ const TaskDetails = () => {
 
       if (task?.stage === "expired") {
         throw new Error(
-          "Không thể cập nhật trạng thái cho công việc đã hết hạn!"
+          "Không thể cập nhật trạng thái cho công việc đã trễ hạn!"
         );
       }
 
-      if (userRole && task.stage === "pending") {
+      if (
+        userRole &&
+        task.stage === "pending" &&
+        !task?.createdBy === user?._id
+      ) {
         throw new Error("Bạn không có quyền làm điều này!");
       }
 
@@ -127,11 +131,11 @@ const TaskDetails = () => {
       });
 
       if (response.data?.status) {
-        toast.success("Cập nhật công việc thành công!");
-        refetch(); // Refetch data to update the UI
+        message.success("Cập nhật công việc thành công!");
+        refetch();
       } else {
         console.error("Error updating task:", response.data?.message);
-        toast.error("Có lỗi xảy ra!");
+        message.error("Có lỗi xảy ra!");
       }
     } catch (error) {
       console.log(error);
@@ -165,12 +169,7 @@ const TaskDetails = () => {
                     )}
                   >
                     <span className="text-lg">{ICONS[task?.priority]}</span>
-                    <span className="uppercase">
-                      {task?.priority === "high" && "QUAN TRỌNG"}
-                      {task?.priority === "medium" && "Ưu tiên"}
-                      {task?.priority === "normal" && "Bình thường"}
-                      {task?.priority === "low" && "Thấp"}
-                    </span>
+                    <span className="uppercase">{task?.priority}</span>
                   </div>
 
                   <div className={clsx("flex items-center gap-2")}>
@@ -188,11 +187,12 @@ const TaskDetails = () => {
                     </span>
                   </div>
                   <div>
-                    {user?.isAdmin ? (
+                    {user?.role === "Trưởng bộ môn" ? (
                       <Button
                         type="primary"
                         className="bg-green-500 hover:bg-green-200"
                         onClick={submitHandler}
+                        disabled={task?.stage === "completed"}
                       >
                         <span className="flex items-center">
                           <EditOutlined style={{ marginRight: "5px" }} />
@@ -204,6 +204,7 @@ const TaskDetails = () => {
                         type="primary"
                         className="bg-green-500 hover:bg-green-200"
                         onClick={submitHandler}
+                        disabled={task?.stage === "completed"}
                       >
                         <span className="flex items-center">
                           <EditOutlined style={{ marginRight: "5px" }} />
@@ -219,8 +220,11 @@ const TaskDetails = () => {
                 </p>
                 <p className="text-gray-500">
                   Deadline:{" "}
-                  {new Date(task?.deadline).toLocaleDateString("vi-VN")}
+                  {task?.deadline
+                    ? new Date(task.deadline).toLocaleDateString("vi-VN")
+                    : ""}
                 </p>
+
                 <p className="text-gray-500">
                   Ngày hoàn thành:{" "}
                   {task?.updatedAt && task?.stage === "completed" && (
@@ -374,11 +378,11 @@ const Activities = ({ activity, id, refetch }) => {
         id,
       }).unwrap();
       setText("");
-      toast.success(result?.message);
+      message.success(result?.message);
       refetch();
     } catch (error) {
       console.log(error);
-      toast.error(error?.data?.message || error.error);
+      message.error(error?.data?.message || error.error);
     }
   };
 

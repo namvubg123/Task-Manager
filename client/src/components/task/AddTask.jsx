@@ -20,13 +20,18 @@ import {
 } from "../../redux/slices/api/taskApi";
 import { toast } from "sonner";
 import { dateFormatter } from "../../utils";
+import { useSelector } from "react-redux";
+import { message } from "antd";
 
 const LISTS = ["TODO", "PENDING", "COMPLETED", "LATE", "EXPIRED"];
-const PRIORITY = ["HIGH", "MEDIUM", "NORMAL", "LOW"];
+const PRIORITY = ["Ưu tiên", "Quan trọng", "Bình thường"];
 
 const uploadedFileURLs = [];
 
 const AddTask = ({ open, setOpen, task }) => {
+  const { user } = useSelector((state) => state.auth);
+  const userRole = user?.role === "Giảng viên";
+
   const defaultValues = {
     title: task?.title || "",
     description: "",
@@ -46,11 +51,10 @@ const AddTask = ({ open, setOpen, task }) => {
   } = useForm(defaultValues);
 
   const [team, setTeam] = useState(task?.team || []);
+
   const [stage, setStage] = useState(task?.stage?.toUpperCase() || LISTS[0]);
 
-  const [priority, setPriority] = useState(
-    task?.priority?.toUpperCase() || PRIORITY[2]
-  );
+  const [priority, setPriority] = useState(task?.priority || PRIORITY[2]);
 
   const [assets, setAssets] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -76,7 +80,7 @@ const AddTask = ({ open, setOpen, task }) => {
       const newData = {
         ...data,
         assets: [...URLS, ...uploadedFileURLs],
-        team,
+        team: team.length > 0 ? team : [user._id],
         stage,
         priority,
       };
@@ -85,7 +89,7 @@ const AddTask = ({ open, setOpen, task }) => {
         ? await updateTask({ ...newData, _id: task._id }).unwrap()
         : await createTask(newData).unwrap();
 
-      toast.success("Tạo công việc thành công");
+      toast.success("Thành công");
       setTimeout(() => {
         setOpen(false);
       }, 500);
@@ -161,7 +165,7 @@ const AddTask = ({ open, setOpen, task }) => {
               error={errors.description ? errors.description.message : ""}
             />
 
-            <UserList setTeam={setTeam} team={team} />
+            {!userRole && <UserList setTeam={setTeam} team={team} />}
 
             <div className="flex gap-4">
               {/* <SelectList
@@ -204,7 +208,7 @@ const AddTask = ({ open, setOpen, task }) => {
                     className="hidden"
                     id="imgUpload"
                     onChange={(e) => handleSelect(e)}
-                    accept=".jpg, .png, .jpeg"
+                    // accept=".jpg, .png, .jpeg"
                     multiple={true}
                   />
                   <BiImages />
@@ -220,7 +224,7 @@ const AddTask = ({ open, setOpen, task }) => {
                 </span>
               ) : (
                 <Button
-                  label="Tạo mới"
+                  label="Hoàn thành"
                   type="submit"
                   className="bg-blue-600 px-8 text-sm font-semibold text-white hover:bg-blue-700  sm:w-auto"
                 />

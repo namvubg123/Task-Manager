@@ -70,7 +70,6 @@ export const createDepartment = async (req, res) => {
 
 export const updateDepartment = async (req, res) => {
   const { _id, name, description, manager } = req.body;
-  console.log(req.body);
 
   try {
     const department = await Department.findById(_id);
@@ -83,12 +82,22 @@ export const updateDepartment = async (req, res) => {
       return res.status(400).json({ message: "Người quản lý không tồn tại" });
     }
 
+    const currentManager = department.manager;
+    if (currentManager && currentManager.toString() !== manager) {
+      const currentManagerUser = await User.findById(currentManager);
+      if (currentManagerUser) {
+        currentManagerUser.role = "Giảng viên";
+        await currentManagerUser.save();
+      }
+    }
+
     department.name = name;
     department.description = description;
     department.manager = manager;
     await department.save();
 
     managerUser.department = department._id;
+
     managerUser.role = "Trưởng bộ môn";
     await managerUser.save();
 

@@ -25,6 +25,7 @@ const NotificationPanel = () => {
   const [selected, setSelected] = useState(null);
 
   const { data, refetch } = useGetNotificationsQuery();
+
   const [markAsRead] = useMarkNotiAsReadMutation();
 
   const readHandler = async (type, id) => {
@@ -38,9 +39,9 @@ const NotificationPanel = () => {
   };
 
   const callsToAction = [
-    { name: "Cancel", href: "#", icon: "" },
+    { name: "Hủy", href: "#", icon: "" },
     {
-      name: "Mark All Read",
+      name: "Đánh dấu tất cả là đã đọc",
       href: "#",
       icon: "",
       onClick: () => readHandler("all", ""),

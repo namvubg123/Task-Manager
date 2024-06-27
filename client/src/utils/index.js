@@ -35,10 +35,9 @@ export function getInitials(fullName) {
 }
 
 export const PRIOTITYSTYELS = {
-  high: "text-red-600",
-  medium: "text-yellow-600",
-  low: "text-blue-600",
-  normal: "text-green-600",
+  "Ưu tiên": "text-red-600",
+  "Quan trọng": "text-yellow-600",
+  "Bình thường": "text-green-600",
 };
 
 export const TASK_TYPE = {

@@ -8,7 +8,6 @@ const userSchema = new Schema(
     role: {
       type: String,
       enum: ["Trưởng bộ môn", "Giảng viên"],
-      required: true,
     },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },

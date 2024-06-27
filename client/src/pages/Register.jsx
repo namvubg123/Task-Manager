@@ -8,6 +8,7 @@ import { useRegisterMutation } from "../redux/slices/api/authApi";
 import { toast } from "sonner";
 import { setCredentials } from "../redux/slices/authSlice";
 import Loading from "./../components/Loader";
+import { message } from "antd";
 
 const Register = () => {
   const { user } = useSelector((state) => state.auth);
@@ -27,11 +28,11 @@ const Register = () => {
     try {
       const result = await signUp(data).unwrap();
       //   dispatch(setCredentials(result));
-      toast.success("Tạo thành công ");
+      message.success("Tạo thành công ");
       navigate("/");
     } catch (error) {
       // console.log(error);
-      toast.error(error?.data?.message || error.message);
+      message.error(error?.data?.message || error.message);
     }
   };
   const handleLoginClick = () => {

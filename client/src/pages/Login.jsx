@@ -8,6 +8,7 @@ import { useLoginMutation } from "../redux/slices/api/authApi";
 import { toast } from "sonner";
 import { setCredentials } from "../redux/slices/authSlice";
 import Loading from "./../components/Loader";
+import { message } from "antd";
 
 const Login = () => {
   const { user } = useSelector((state) => state.auth);
@@ -30,7 +31,7 @@ const Login = () => {
       navigate("/");
     } catch (error) {
       // console.log(error);
-      toast.error(error?.data?.message || error.message);
+      message.error(error?.data?.message || error.message);
     }
   };
   const handleRegistrationClick = () => {

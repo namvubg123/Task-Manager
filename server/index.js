@@ -27,7 +27,7 @@ const dailyTaskCheck = schedule.scheduleJob("*/1 * * * *", async () => {
   dailyTaskCheck.invoke();
 
   tasks.forEach(async (task) => {
-    if (task.stage === "pending") {
+    if (task.stage === "pending" && task.stage === "completed") {
       return;
     }
 

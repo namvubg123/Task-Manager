@@ -5,7 +5,7 @@ import moment from "moment";
 
 export const createTask = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const { userId, department } = req.user;
 
     const {
       title,
@@ -17,6 +17,12 @@ export const createTask = async (req, res) => {
       deadline,
       description,
     } = req.body;
+
+    if (!team || team.length === 0) {
+      return res
+        .status(401)
+        .json({ status: false, message: "Cần chọn người nhận công việc!" });
+    }
 
     let text = "Công việc mới được giao cho bạn";
     if (team?.length > 1) {
@@ -39,11 +45,12 @@ export const createTask = async (req, res) => {
       team,
       stage: stage.toLowerCase(),
       date,
-      priority: priority.toLowerCase(),
+      priority: priority,
       assets,
       activities: activity,
       deadline,
       createdBy: userId,
+      department: department,
     });
 
     await Notice.create({
@@ -54,7 +61,7 @@ export const createTask = async (req, res) => {
 
     res
       .status(200)
-      .json({ status: true, task, message: "Task created successfully." });
+      .json({ status: true, task, message: "Tạo công việc thành công." });
   } catch (error) {
     console.log(error);
     return res.status(400).json({ status: false, message: error.message });
@@ -69,7 +76,7 @@ export const duplicateTask = async (req, res) => {
 
     const newTask = await Task.create({
       ...task,
-      title: task.title + " - Duplicate",
+      title: task.title + " - Bản sao",
     });
 
     newTask.team = task.team;
@@ -78,6 +85,9 @@ export const duplicateTask = async (req, res) => {
     newTask.priority = task.priority;
     newTask.stage = task.stage;
     newTask.description = task.description;
+    newTask.deadline = task.deadline;
+    newTask.department = task.department;
+    newTask.createdBy = task.createdBy;
 
     await newTask.save();
 
@@ -86,7 +96,7 @@ export const duplicateTask = async (req, res) => {
     if (task.team.length > 1) {
       text = text + ` và ${task.team.length - 1} người khác.`;
     }
-    const deadlineFormatted = moment(deadline).format("DD/MM/YYYY");
+    const deadlineFormatted = moment(task.deadline).format("DD/MM/YYYY");
     text =
       text +
       ` Mức độ ưu tiên là ${task.priority}. Hạn chót là ngày ${deadlineFormatted}. Thank you!!!`;
@@ -124,9 +134,7 @@ export const postTaskActivity = async (req, res) => {
 
     await task.save();
 
-    res
-      .status(200)
-      .json({ status: true, message: "Activity posted successfully." });
+    res.status(200).json({ status: true, message: "Thành công" });
   } catch (error) {
     console.log(error);
     return res.status(400).json({ status: false, message: error.message });
@@ -135,34 +143,37 @@ export const postTaskActivity = async (req, res) => {
 
 export const dashboardStatistics = async (req, res) => {
   try {
-    const { userId, isAdmin } = req.user;
+    const { userId, isAdmin, role, department } = req.user;
 
-    const allTasks = isAdmin
-      ? await Task.find({
-          isTrashed: false,
+    let query = { isTrashed: false, department };
+
+    let allTasks;
+    if (role === "Trưởng bộ môn") {
+      allTasks = await Task.find({ ...query, createdBy: userId })
+        .populate({
+          path: "team",
+          select: "name role title email department",
         })
-          .populate({
-            path: "team",
-            select: "name role title email department",
-          })
-          .sort({ _id: -1 })
-      : await Task.find({
-          isTrashed: false,
-          team: { $all: [userId] },
+        .sort({ _id: -1 });
+    } else {
+      allTasks = await Task.find({
+        ...query,
+        team: { $all: [userId] },
+      })
+        .populate({
+          path: "team",
+          select: "name role title email department",
         })
-          .populate({
-            path: "team",
-            select: "name role title email department",
-          })
-          .sort({ _id: -1 });
+        .sort({ _id: -1 });
+    }
 
     const users = await User.find({ isActive: true })
       .select("name title role isAdmin createdAt department")
       .limit(10)
       .sort({ _id: -1 });
 
-    //   group task by stage and calculate counts
-    const groupTaskks = allTasks.reduce((result, task) => {
+    // Group task by stage and calculate counts
+    const groupTasks = allTasks.reduce((result, task) => {
       const stage = task.stage;
 
       if (!result[stage]) {
@@ -170,7 +181,6 @@ export const dashboardStatistics = async (req, res) => {
       } else {
         result[stage] += 1;
       }
-
       return result;
     }, {});
 
@@ -184,15 +194,16 @@ export const dashboardStatistics = async (req, res) => {
       }, {})
     ).map(([name, total]) => ({ name, total }));
 
-    // calculate total tasks
+    // Calculate total tasks
     const totalTasks = allTasks?.length;
-    const last10Task = allTasks?.slice(0, 10);
+    const last5Task = allTasks?.slice(0, 5);
 
     const summary = {
+      allTasks,
       totalTasks,
-      last10Task,
+      last5Task,
       users: isAdmin ? users : [],
-      tasks: groupTaskks,
+      tasks: groupTasks,
       graphData: groupData,
     };
 
@@ -210,21 +221,32 @@ export const dashboardStatistics = async (req, res) => {
 export const getTasks = async (req, res) => {
   try {
     const { stage, isTrashed } = req.query;
+    const { userId, role, department } = req.user;
 
     let query = { isTrashed: isTrashed ? true : false };
 
     if (stage) {
       query.stage = stage;
     }
+    query.department = department;
 
-    let queryResult = Task.find(query)
-      .populate({
-        path: "team",
-        select: "name title email role department",
-      })
-      .sort({ _id: -1 });
-
-    const tasks = await queryResult;
+    const tasks =
+      role === "Trưởng bộ môn"
+        ? await Task.find(query)
+            .populate({
+              path: "team",
+              select: "name role title email department",
+            })
+            .sort({ _id: -1 })
+        : await Task.find({
+            ...query,
+            team: { $all: [userId] },
+          })
+            .populate({
+              path: "team",
+              select: "name role title email department",
+            })
+            .sort({ _id: -1 });
 
     res.status(200).json({
       status: true,
@@ -293,15 +315,13 @@ export const updateTask = async (req, res) => {
     console.log(id);
     const { title, deadline, team, stage, priority, assets, description } =
       req.body;
-    if (!title || !deadline || !team || !stage || !priority || !assets) {
-      throw new Error("Invalid task data");
-    }
+
     const task = await Task.findById(id);
 
     task.title = title;
     task.description = description;
     task.deadline = deadline;
-    task.priority = priority.toLowerCase();
+    task.priority = priority;
     task.assets = assets;
     task.stage = stage.toLowerCase();
     task.team = team;
@@ -310,7 +330,7 @@ export const updateTask = async (req, res) => {
 
     res
       .status(200)
-      .json({ status: true, message: "Task update successfully!" });
+      .json({ status: true, message: "Cập nhật công việc thành công!" });
   } catch (error) {
     console.log(error);
     return res.status(400).json({ status: false, message: error.message });
@@ -360,7 +380,7 @@ export const deleteRestoreTask = async (req, res) => {
 
     res.status(200).json({
       status: true,
-      message: `Operation performed successfully.`,
+      message: `Thành công.`,
     });
   } catch (error) {
     console.log(error);

@@ -24,7 +24,9 @@ const AddUser = ({ open, setOpen, userData }) => {
           ...values,
           _id: userData?._id,
         }).unwrap();
-        message.success("Cập nhật thành công");
+        message.success(
+          "Cập nhật thành công, đăng nhập lại để thấy sự thay đổi"
+        );
 
         if (userData._id === user._id) {
           setCredentials({ ...result.user });
@@ -41,7 +43,7 @@ const AddUser = ({ open, setOpen, userData }) => {
         setOpen(false);
       }, 1500);
     } catch (error) {
-      toast.error(error.data.message);
+      message.error(error.data.message);
       console.log(error.data.message);
     }
   };
@@ -64,11 +66,7 @@ const AddUser = ({ open, setOpen, userData }) => {
         >
           <Input placeholder="Họ và tên" />
         </Form.Item>
-        <Form.Item
-          label="Bộ môn"
-          name="department"
-          rules={[{ required: true, message: "Bộ môn là bắt buộc!" }]}
-        >
+        <Form.Item label="Bộ môn" name="department">
           <Select placeholder="Chọn bộ môn">
             {departmentData &&
               departmentData.map((department) => (
@@ -86,10 +84,13 @@ const AddUser = ({ open, setOpen, userData }) => {
           <Input placeholder="Email" />
         </Form.Item>
         <Form.Item
-          label="Chức vụ"
-          name="role"
-          rules={[{ required: true, message: "Chức vụ là bắt buộc!" }]}
+          label="Số điện thoại"
+          name="phone"
+          rules={[{ required: true, message: "Số điện thoại là bắt buộc!" }]}
         >
+          <Input placeholder="Số điện thoại" />
+        </Form.Item>
+        <Form.Item label="Chức vụ" name="role">
           <Select placeholder="Chọn chức vụ">
             <Option value="Trưởng bộ môn">Trưởng bộ môn</Option>
             <Option value="Giảng viên">Giảng viên</Option>

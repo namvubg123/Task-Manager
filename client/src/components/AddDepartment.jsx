@@ -29,21 +29,30 @@ const AddDepartment = ({ open, setOpen, departmentData }) => {
 
   const handleSubmit = async (values) => {
     try {
+      let result;
       if (departmentData) {
-        const result = await updateDepartment({
+        result = await updateDepartment({
           _id: departmentData._id,
           ...values,
         });
         message.success("Cập nhật thành công");
       } else {
-        const result = await addDepartment(values);
+        result = await addDepartment(values);
+        if (result.error) {
+          throw result.error;
+        }
         message.success("Tạo thành công");
       }
       setOpen(false);
       form.resetFields();
     } catch (error) {
-      console.log(error);
-      message.error("Lỗi");
+      if (error.response && error.response.data) {
+        message.error(error.response.data.message);
+      } else if (error.data && error.data.message) {
+        message.error(error.data.message);
+      } else {
+        message.error("Lỗi");
+      }
     }
   };
 

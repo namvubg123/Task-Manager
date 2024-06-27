@@ -17,16 +17,15 @@ import AddSubTask from "./task/AddSubTask";
 import { useNavigate } from "react-router-dom";
 
 const ICONS = {
-  high: <MdKeyboardDoubleArrowUp />,
-  medium: <MdKeyboardArrowUp />,
-  low: <MdKeyboardArrowDown />,
+  "Ưu tiên": <MdKeyboardDoubleArrowUp />,
+  "Quan trọng": <MdKeyboardArrowUp />,
+  "Bình thường": <MdKeyboardArrowDown />,
 };
 
 const TaskCard = ({ task }) => {
   const { user } = useSelector((state) => state.auth);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  console.log(task);
 
   return (
     <>
@@ -39,15 +38,10 @@ const TaskCard = ({ task }) => {
             )}
           >
             <span className="text-lg">{ICONS[task?.priority]}</span>
-            <span className="uppercase">
-              {task?.priority === "high" && "QUAN TRỌNG"}
-              {task?.priority === "medium" && "Ưu tiên"}
-              {task?.priority === "normal" && "Bình thường"}
-              {task?.priority === "low" && "Thấp"}
-            </span>
+            <span className="uppercase">{task?.priority}</span>
           </div>
 
-          {user?.isAdmin && <TaskDialog task={task} />}
+          {!user?.isAdmin && <TaskDialog task={task} />}
         </div>
 
         <>
@@ -59,7 +53,7 @@ const TaskCard = ({ task }) => {
               <h4 className="line-clamp-1 text-black">{task?.title}</h4>
             </div>
             <span className="text-sm text-gray-600">
-              {formatDate(new Date(task?.deadline))}
+              {task?.deadline ? formatDate(new Date(task?.deadline)) : ""}
             </span>
           </div>
         </>
@@ -123,7 +117,7 @@ const TaskCard = ({ task }) => {
         <div className="w-full pb-2">
           <button
             onClick={() => setOpen(true)}
-            disabled={user.isAdmin ? false : true}
+            disabled={!user.isAdmin ? false : true}
             className="w-full flex gap-4 items-center text-sm text-gray-500 font-semibold disabled:cursor-not-allowed disabled::text-gray-300"
           >
             <IoMdAdd className="text-lg" />

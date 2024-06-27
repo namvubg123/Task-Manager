@@ -14,6 +14,7 @@ import {
   useTrashTaskMutation,
 } from "../../redux/slices/api/taskApi";
 import { toast } from "sonner";
+import { message } from "antd";
 
 const TaskDialog = ({ task }) => {
   const [open, setOpen] = useState(false);
@@ -27,14 +28,14 @@ const TaskDialog = ({ task }) => {
   const duplicateHandler = async () => {
     try {
       const res = await duplicateTask(task._id).unwrap();
-      toast.success("Sao chép công việc thành công");
+      message.success("Sao chép công việc thành công");
       setTimeout(() => {
         setOpenDialog(false);
         window.location.reload();
       }, 500);
     } catch (err) {
       console.log(err);
-      toast.error(err?.data?.message || err.error);
+      message.error(err?.data?.message || err.error);
     }
   };
 
@@ -48,14 +49,14 @@ const TaskDialog = ({ task }) => {
         id: task._id,
         isTrashed: "trash",
       }).unwrap();
-      toast.success("Xóa công việc thành công");
+      message.success("Xóa công việc thành công");
       setTimeout(() => {
         setOpenDialog(false);
         window.location.reload();
       }, 500);
     } catch (err) {
       console.log(err);
-      toast.error(err?.data?.message || err.error);
+      message.error(err?.data?.message || err.error);
     }
   };
 

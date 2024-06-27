@@ -5,11 +5,11 @@ const taskSchema = new Schema(
     title: { type: String, required: true },
     description: { type: String, require: true },
     date: { type: Date, default: new Date() },
-    deadline: { type: Date },
+    deadline: { type: Date, default: null },
     priority: {
       type: String,
-      default: "normal",
-      enum: ["high", "medium", "normal", "low"],
+      default: "Bình thường",
+      enum: ["Ưu tiên", "Quan trọng", "Bình thường"],
     },
     stage: {
       type: String,
@@ -49,7 +49,13 @@ const taskSchema = new Schema(
       },
     ],
     assets: [String],
-    team: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    team: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+    ],
     department: { type: Schema.Types.ObjectId, ref: "Department" },
     isTrashed: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },

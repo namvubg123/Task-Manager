@@ -9,6 +9,7 @@ import { LuClipboardEdit } from "react-icons/lu";
 import { FaNewspaper, FaUsers } from "react-icons/fa";
 import { FaArrowsToDot } from "react-icons/fa6";
 import moment from "moment";
+import "moment/locale/vi";
 // import { summary } from "../assets/data";
 import clsx from "clsx";
 import { Chart } from "../components/Chart";
@@ -17,11 +18,13 @@ import UserInfo from "../components/UserInfo";
 import { useGetDashboardQuery } from "../redux/slices/api/taskApi";
 import Loading from "./../components/Loader";
 
+moment.locale("vi");
+
 const TaskTable = ({ tasks }) => {
   const ICONS = {
-    high: <MdKeyboardDoubleArrowUp />,
-    medium: <MdKeyboardArrowUp />,
-    low: <MdKeyboardArrowDown />,
+    "Ưu tiên": <MdKeyboardDoubleArrowUp />,
+    "Quang trọng": <MdKeyboardArrowUp />,
+    "Bình thường": <MdKeyboardArrowDown />,
   };
 
   const TableHeader = () => (
@@ -52,12 +55,7 @@ const TaskTable = ({ tasks }) => {
           <span className={clsx("text-lg", PRIOTITYSTYELS[task.priority])}>
             {ICONS[task.priority]}
           </span>
-          <span className="capitalize">
-            {task?.priority === "high" && "QUAN TRỌNG"}
-            {task?.priority === "medium" && "Ưu tiên"}
-            {task?.priority === "normal" && "Bình thường"}
-            {task?.priority === "low" && "Thấp"}
-          </span>
+          <span className="capitalize">{task?.priority}</span>
         </div>
       </td>
 
@@ -160,6 +158,7 @@ const UserTable = ({ users }) => {
 };
 const Dashboard = () => {
   const { data, isLoading } = useGetDashboardQuery();
+  console.log(data);
   if (isLoading)
     return (
       <div className="py-19">
@@ -227,18 +226,16 @@ const Dashboard = () => {
           <Card key={index} icon={icon} bg={bg} label={label} count={total} />
         ))}
       </div>
-      {/* 
+
       <div className="w-full bg-white my-16 p-4 rounded shadow-sm">
-        <h4 className="text-xl text-gray-600 font-semibold">
-          Chart by Priority
-        </h4>
-        <Chart data={data?.graphData} />
-      </div> */}
+        <h4 className="text-xl text-gray-600 font-semibold">Biểu đồ</h4>
+        <Chart data={data?.allTasks} />
+      </div>
 
       <div className="w-full flex flex-col md:flex-row gap-4 2xl:gap-10 py-8">
         {/* /left */}
 
-        <TaskTable tasks={data?.last10Task} />
+        <TaskTable tasks={data?.last5Task} />
 
         {/* /right */}
 

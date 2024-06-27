@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Title from "../components/Title";
 import { IoMdAdd } from "react-icons/io";
 // import { summary } from "../assets/data";
@@ -12,10 +12,11 @@ import {
   useUserActionMutation,
 } from "../redux/slices/api/userApi";
 import { toast } from "sonner";
-import { Table, Button } from "antd";
+import { Table, Button, Input, Space, message } from "antd";
 import { useSelector } from "react-redux";
 import { EditOutlined } from "@ant-design/icons";
-import { DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, SearchOutlined } from "@ant-design/icons";
+import Highlighter from "react-highlight-words";
 
 const Users = () => {
   const { user } = useSelector((state) => state.auth);
@@ -23,44 +24,50 @@ const Users = () => {
 
   const [openDialog, setOpenDialog] = useState(false);
   const [open, setOpen] = useState(false);
-  const [openAction, setOpenAction] = useState(false);
   const [selected, setSelected] = useState(null);
 
   const { data, isLoading, refetch } = useGetTeamListQuery();
   const [deleteUser] = useDeleteUserMutation();
-  const [userAction] = useUserActionMutation();
 
-  const userActionHandler = async () => {
-    try {
-      const result = await userAction({
-        isActive: !selected?.isActive,
-        id: selected?._id,
-      });
+  // const [openAction, setOpenAction] = useState(false);
+  // const [userAction] = useUserActionMutation();
 
-      refetch();
-      toast.success(result.data.message);
-      setSelected(null);
-      setTimeout(() => {
-        setOpenAction(false);
-      }, 500);
-    } catch (error) {
-      console.log(err);
-      toast.error(err?.data?.message || err.error);
-    }
-  };
+  // const userActionHandler = async () => {
+  //   try {
+  //     const result = await userAction({
+  //       isActive: !selected?.isActive,
+  //       id: selected?._id,
+  //     });
+
+  //     refetch();
+  //     toast.success(result.data.message);
+  //     setSelected(null);
+  //     setTimeout(() => {
+  //       setOpenAction(false);
+  //     }, 500);
+  //   } catch (error) {
+  //     console.log(err);
+  //     toast.error(err?.data?.message || err.error);
+  //   }
+  // };
+  // const userStatusClick = (el) => {
+  //   setSelected(el);
+  //   setOpenAction(true);
+  // };
+
   const deleteHandler = async () => {
     try {
       const result = await deleteUser(selected);
 
       refetch();
-      toast.success("Xóa thành công");
+      message.success("Xóa thành công");
       setSelected(null);
       setTimeout(() => {
         setOpenDialog(false);
       }, 500);
     } catch (error) {
       console.log(err);
-      toast.error(err?.data?.message || err.error);
+      message.error(err?.data?.message || err.error);
     }
   };
 
@@ -74,9 +81,101 @@ const Users = () => {
     setOpen(true);
   };
 
-  const userStatusClick = (el) => {
-    setSelected(el);
-    setOpenAction(true);
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+  const searchInput = useRef(null);
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+  const handleReset = (clearFilters) => {
+    clearFilters();
+    setSearchText("");
+  };
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+      close,
+    }) => (
+      <div
+        style={{
+          padding: 8,
+        }}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <Input
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{
+            marginBottom: 8,
+            display: "block",
+          }}
+        />
+        <Space>
+          <Button
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Tìm kiếm
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Reset
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined
+        style={{
+          color: filtered ? "#1677ff" : undefined,
+        }}
+      />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex] &&
+      record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+    onFilterDropdownOpenChange: (visible) => {
+      if (visible) {
+        setTimeout(() => searchInput.current?.select(), 100);
+      }
+    },
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{
+            backgroundColor: "#ffc069",
+            padding: 0,
+          }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ""}
+        />
+      ) : (
+        text
+      ),
+  });
+
+  const onChange = (pagination, filters, sorter, extra) => {
+    console.log("params", pagination, filters, sorter, extra);
   };
 
   const columns = [
@@ -85,6 +184,7 @@ const Users = () => {
       dataIndex: "name",
       align: "center",
       key: "name",
+      ...getColumnSearchProps("name"),
     },
     {
       title: "Bộ môn",
@@ -97,27 +197,32 @@ const Users = () => {
       dataIndex: "email",
       align: "center",
       key: "email",
+      ...getColumnSearchProps("email"),
     },
     {
       title: "Chức vụ",
       dataIndex: "role",
       align: "center",
       key: "role",
+      filters: [
+        {
+          text: "Giảng viên",
+          value: "Giảng viên",
+        },
+        {
+          text: "Trưởng bộ môn",
+          value: "Trưởng bộ môn",
+        },
+      ],
+      onFilter: (value, record) => record.role.indexOf(value) === 0,
     },
-
-    // {
-    //   title: "Tình trạng",
-    //   dataIndex: "isActive",
-    //   align: "center",
-    //   key: "isActive",
-    //   render: (isActive, record) => (
-    //     <div>
-    //       <Button onClick={() => userStatusClick(record)}>
-    //         {isActive ? "Hoạt động" : "Ngưng"}
-    //       </Button>
-    //     </div>
-    //   ),
-    // },
+    {
+      title: "Số điện thoại",
+      dataIndex: "phone",
+      align: "center",
+      key: "phone",
+      ...getColumnSearchProps("phone"),
+    },
 
     {
       title: "Thao tác",
@@ -141,7 +246,7 @@ const Users = () => {
               className="text-red-700 hover:text-red-500 font-semibold sm:px-0"
               type="button"
               label="Xóa"
-              onClick={() => deleteClick(record.key)}
+              onClick={() => deleteClick(record._id)}
             >
               <DeleteOutlined />
             </Button>
@@ -182,12 +287,12 @@ const Users = () => {
         onClick={deleteHandler}
       />
 
-      <UserAction
+      {/* <UserAction
         open={openAction}
         setOpen={setOpenAction}
         onClick={userActionHandler}
-      />
-      <Table bordered dataSource={data} columns={columns} />
+      /> */}
+      <Table bordered dataSource={data} columns={columns} onChange={onChange} />
     </>
   );
 };

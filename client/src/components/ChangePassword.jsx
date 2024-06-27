@@ -7,6 +7,7 @@ import Textbox from "./Textbox";
 import { useChangeUserPasswordMutation } from "../redux/slices/api/userApi";
 import { toast } from "sonner";
 import Loading from "./Loader";
+import { message } from "antd";
 
 const ChangePassword = ({ open, setOpen }) => {
   const {
@@ -19,19 +20,19 @@ const ChangePassword = ({ open, setOpen }) => {
 
   const handleOnSubmit = async (data) => {
     if (data.password !== data.cpass) {
-      toast.warning("Nhập lại mật khẩu không đúng!");
+      message.warning("Nhập lại mật khẩu không đúng!");
       return;
     }
     try {
       const res = await changeUserPassword(data).unwrap();
-      toast.success("Đổi mật khẩu thành công");
+      message.success("Đổi mật khẩu thành công");
 
       setTimeout(() => {
         setOpen(false);
       }, 1500);
     } catch (err) {
       console.log(err);
-      toast.error(err?.data?.message || err.error);
+      message.error(err?.data?.message || err.error);
     }
   };
 
